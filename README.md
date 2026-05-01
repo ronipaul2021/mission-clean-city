@@ -1,87 +1,101 @@
-# 🏙️ Birnagar Municipality Civic Tech Platform (Mission Clean City)
+<div align="center">
+  <h1>🏙️ Mission Clean City — Birnagar Municipality</h1>
+  <p><em>A Next-Generation Civic Tech Platform for Transparent & Accountable Governance</em></p>
+  
+  [![Python](https://img.shields.io/badge/Python-3.x-blue.svg?style=for-the-badge&logo=python&logoColor=white)]()
+  [![Django](https://img.shields.io/badge/Django-Secure-092E20.svg?style=for-the-badge&logo=django&logoColor=white)]()
+  [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-Modern-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)]()
+  [![OpenCV](https://img.shields.io/badge/OpenCV-AI_Vision-5C3EE8.svg?style=for-the-badge&logo=opencv&logoColor=white)]()
+</div>
 
-A robust, secure, and highly scalable civic management platform built to bridge the gap between the citizens of Birnagar and their municipal administration. This platform handles real-time complaint tracking, secure citizen registration, automated issue assignment, and data-driven administrative analytics.
+<br />
 
----
-
-## 🌟 Major Focus & Objectives
-The primary objective of this project is to create a **transparent, accountable, and highly secure digital ecosystem** for municipal governance. 
-
-Major focuses include:
-- **Accessibility:** A fully mobile-responsive interface for citizens to report issues from anywhere.
-- **Accountability:** Real-time tracking of complaints from "Pending" to "Resolved," complete with resolution proof (photos) required from administrators.
-- **Data Integrity:** Strict validation of user data (Aadhaar, Mobile) to prevent spam and duplicate accounts.
-- **Administrative Efficiency:** Powerful dashboards with full-text search, bulk-actions, and automated analytics to help officials prioritize urban issues.
-
----
-
-## 🛡️ Security & High-Risk Data Handling (CRITICAL)
-Handling citizen data requires enterprise-grade security. This platform implements strict protocols for highly sensitive information:
-
-- **Military-Grade Aadhaar Encryption:** Real Aadhaar numbers are **never** stored in plain text. They are encrypted using symmetric Fernet encryption before touching the database.
-- **Blind Duplicate Detection:** To enforce "One-Aadhaar-One-Account" without exposing data, the system stores a one-way cryptographic hash of the Aadhaar number specifically for collision detection.
-- **Protected Media Gatekeeper:** Uploaded profile photos and complaint evidence cannot be accessed directly via URL. A Django middleware gatekeeper ensures only authenticated owners or admins can view sensitive media.
-- **Upload Rate Limiting & Validation:** File uploads are strictly validated by MIME type, size-limited (e.g., 100MB for videos, 75KB for compressed images), and rate-limited to prevent Denial of Service (DoS) attacks on the server storage.
+> **Mission Clean City** is an enterprise-grade web application built to bridge the gap between citizens and municipal administrators. It digitizes the entire urban complaint lifecycle—from GPS-tagged problem reporting to verified, photo-backed resolutions.
 
 ---
 
-## 🤖 Where AI is Used
-Artificial Intelligence and Computer Vision are integrated directly into the image processing pipeline to improve data quality and reduce manual administrative review:
+## ✨ System Capabilities Overview
 
-- **AI Face Detection & Auto-Cropping:** Using **OpenCV (Haar Cascades)**, the `ImageProcessor` service automatically scans uploaded citizen profile photos to detect human faces. If a face is found, the system intelligently calculates the bounding box and auto-crops the image to a perfect square centered on the user's face, ensuring professional-looking ID cards across the platform.
-- **Smart Image Compression:** Automated, multi-phase JPEG compression algorithms ensure that high-resolution smartphone photos are aggressively compressed (e.g., down to 75KB) without losing visible forensic detail needed for complaint resolution.
-
----
-
-## 🔐 Authentication & Access Control
-- **OTP-Based Verification:** Registration relies on real-time SMS OTP verification integrated with the **Fast2SMS API**. 
-- **Session Security:** OTPs are stored securely in encrypted server-side sessions with a strict expiry window (default 10 minutes).
-- **Role-Based Access Control (RBAC):** Distinct `ADMIN` and `CITIZEN` roles. The system enforces strict route protection, preventing citizens from accessing analytics and admins from submitting dummy complaints.
+| 🏢 **For Administrators** | 🧑‍🤝‍🧑 **For Citizens** |
+| :--- | :--- |
+| **Advanced Dashboard:** Real-time metrics, KPI cards, and charts | **One-Tap Reporting:** Submit complaints with photos, videos, and live GPS coordinates |
+| **Powerful Search:** Multi-parameter filtering (Date, Priority, Ward, Status) | **Live Tracking:** Follow issues from `Pending` to `In Progress` to `Resolved` |
+| **Bulk Actions:** Update multiple issues simultaneously with notes & photo proofs | **Accountability:** Rate the quality of municipal work once an issue is resolved |
+| **Suggestion Box:** Review, categorize, and act on citizen ideas | **Appeals:** Re-open terminated or unsatisfactorily resolved tickets |
 
 ---
 
-## 💻 Technical Architecture
+## 🛡️ Enterprise Security & Data Protection (High-Risk Handling)
 
-### Backend (Django / Python)
-- **Service-Oriented Architecture:** Heavy business logic is extracted out of views and into a dedicated `services/` layer (e.g., `ComplaintService`, `UserService`), ensuring thin controllers and high testability.
-- **Centralized Data Serialization:** Custom serializers ensure consistent data formatting for frontend rendering and future REST API expansion, guaranteeing sensitive fields (like passwords/encrypted Aadhaar) never leak into JSON payloads.
-- **Optimized Queries:** Heavy use of `select_related` and `prefetch_related` to eliminate N+1 database querying issues, reducing dashboard load times from seconds to milliseconds.
+Handling municipal data requires absolute security. The platform implements rigorous protocols to protect citizen identity and prevent system abuse.
 
-### Frontend (HTML / Tailwind CSS)
-- **Dynamic UI:** Built with Django Templates and utility-first Tailwind CSS for a modern, glassmorphic, and highly responsive design.
-- **Advanced Admin Dashboard:** Features a JavaScript-powered multi-filter system (Date Ranges, Priorities, Status) and quick-preset badges, allowing admins to instantly drill down into critical urban issues.
-- **Custom Error Handling:** Branded, user-friendly 400, 403, 404, and 500 error pages ensure citizens are gracefully redirected instead of seeing confusing server stack traces.
+| Security Layer | Implementation Detail | Risk Mitigated |
+| :--- | :--- | :--- |
+| **Aadhaar Encryption** | Symmetric **Fernet Encryption** is used to encrypt real Aadhaar numbers before DB storage. | Identity theft in case of database breach. |
+| **Blind Duplicate Detection** | A one-way cryptographic hash of the Aadhaar is stored to enforce "One-Account-Per-Citizen". | Spam accounts / System abuse. |
+| **Protected Media Routing** | A custom Django middleware gatekeeper intercepts media requests, ensuring only authenticated owners/admins see profile/complaint photos. | Unauthorized public scraping of private images. |
+| **Brute-Force Protection** | Strict rate-limiting on file uploads and registration endpoints (e.g., max 3 uploads/hour). | Server Denial of Service (DoS) and Storage Exhaustion. |
+| **OTP Verification** | Live SMS-based verification via **Fast2SMS API** with secure, encrypted server-side sessions. | Fake phone numbers & impersonation. |
 
 ---
 
-## 🚀 Setup & Installation (Local Development)
+## 🤖 AI & Computer Vision Integration
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ronipaul2021/mission-clean-city-birnagar-municipality.git
-   cd mission-clean-city-birnagar-municipality
-   ```
+Artificial Intelligence is deeply integrated to automate administrative overhead and ensure high data quality.
 
-2. **Set up the Virtual Environment:**
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate  # Windows
-   # source venv/bin/activate # Mac/Linux
-   ```
+| AI Feature | Technology | How It Works |
+| :--- | :--- | :--- |
+| **Facial Detection** | `OpenCV` (Haar Cascades) | Automatically scans uploaded citizen profile photos to detect human faces. |
+| **Smart Auto-Cropping** | `cv2.CascadeClassifier` | If a face is found, the system calculates the exact bounding box and crops the image to a perfect, centered square ID format. |
+| **Forensic Compression** | Pillow (`PIL`) | Multi-phase JPEG compression algorithm shrinks high-res 4K smartphone photos down to `75KB` without destroying crucial forensic details. |
 
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-4. **Environment Variables:**
-   Copy `.env.example` to `.env` and fill in your secret keys (Aadhaar Encryption Key, Fast2SMS API, etc.)
-   ```bash
-   cp .env.example .env
-   ```
+## 💻 Technical Architecture & Stack
 
-5. **Run Migrations & Start Server:**
-   ```bash
-   python manage.py migrate
-   python manage.py runserver
-   ```
+### Backend Engine (Django)
+| Component | Description |
+| :--- | :--- |
+| **Service Layer Pattern** | Heavy business logic is decoupled from `views.py` into `services/` (e.g., `ComplaintService`), resulting in thin controllers and robust, testable logic. |
+| **Data Serializers** | Custom serialization ensures sensitive fields (like encrypted Aadhaar or password hashes) never accidentally leak into templates or API payloads. |
+| **Query Optimization** | Extensive use of `select_related` and `prefetch_related` completely eliminates N+1 query bottlenecks, dropping load times from seconds to milliseconds. |
+
+### Frontend Experience (Tailwind CSS)
+| Component | Description |
+| :--- | :--- |
+| **Glassmorphic UI** | Built with utility-first Tailwind CSS for a modern, responsive, and highly interactive user experience across all mobile devices. |
+| **Dynamic Filters** | JavaScript-powered multi-filters allow admins to combine Date Ranges, Priorities, and Quick-Presets instantly. |
+| **Custom Error Handling** | Branded `400`, `403`, `404`, and `500` error pages ensure a professional aesthetic even when things go wrong, hiding server stack traces. |
+
+---
+
+## 🚀 Local Development Setup
+
+To get the platform running on your local machine, follow these steps:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/ronipaul2021/mission-clean-city-birnagar-municipality.git
+cd mission-clean-city-birnagar-municipality
+
+# 2. Set up the Virtual Environment
+python -m venv venv
+venv\Scripts\activate  # On Windows
+# source venv/bin/activate # On Mac/Linux
+
+# 3. Install Dependencies
+pip install -r requirements.txt
+
+# 4. Configure Environment Variables
+# Copy the example file and add your Secret Keys (Aadhaar, Fast2SMS)
+cp .env.example .env
+
+# 5. Build Database and Run
+python manage.py migrate
+python manage.py runserver
+```
+
+<div align="center">
+  <br />
+  <p><i>Developed with ❤️ for the citizens of Birnagar</i></p>
+</div>
