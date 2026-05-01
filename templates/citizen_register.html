@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-primary-dark">
+            Citizen Registration
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Already registered?
+            <a href="{% url 'citizen_login' %}" class="font-medium text-primary hover:text-secondary transition-colors">
+                Sign in here
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
+            <form class="space-y-6" action="{% url 'citizen_register' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name (As per Aadhaar)
+                        *</label>
+                    <div class="mt-1">
+                        <input id="name" name="name" type="text" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address (Optional)</label>
+                    <div class="mt-1">
+                        <input id="email" name="email" type="email"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="mobile_number" class="block text-sm font-medium text-gray-700">Mobile Number *</label>
+                    <div class="mt-1">
+                        <input id="mobile_number" name="mobile_number" type="tel" required pattern="\d{10}"
+                            title="Please enter exactly 10 digits" maxlength="10" minlength="10"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number *</label>
+                    <div class="mt-1">
+                        <input id="aadhaar" name="aadhaar" type="text" required pattern="\d{12}"
+                            title="Please enter exactly 12 digits" maxlength="12" minlength="12"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Securely encrypted at rest.</p>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Complete Address (as per
+                        Aadhaar) *</label>
+                    <div class="mt-1">
+                        <textarea id="address" name="address" required rows="2"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="ward_number" class="block text-sm font-medium text-gray-700">Ward Number *</label>
+                    <div class="mt-1">
+                        <select id="ward_number" name="ward_number" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md border">
+                            <option value="">Select Ward</option>
+                            {% for i in '123456789'|make_list %}
+                            <option value="{{ i }}">Ward {{ i }}</option>
+                            {% endfor %}
+                            <option value="10">Ward 10</option>
+                            <option value="11">Ward 11</option>
+                            <option value="12">Ward 12</option>
+                            <option value="13">Ward 13</option>
+                            <option value="14">Ward 14</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password *</label>
+                    <div class="mt-1">
+                        <input id="password" name="password" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="retype_password" class="block text-sm font-medium text-gray-700">Retype Password
+                        *</label>
+                    <div class="mt-1">
+                        <input id="retype_password" name="retype_password" type="password" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="profile_photo" class="block text-sm font-medium text-gray-700">Profile Photo *</label>
+                    <div class="mt-1">
+                        <input id="profile_photo" name="profile_photo" type="file" accept="image/*" required
+                            onchange="validatePhotoSize(this, 'profile-preview')"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                    </div>
+                    <div class="mt-3 flex justify-center">
+                        <img id="profile-preview" src="#" alt="Preview"
+                            class="hidden h-32 w-32 object-cover rounded-full border-2 border-primary shadow-sm">
+                    </div>
+                    <p id="photo-error" class="mt-1 text-xs text-red-600 hidden font-bold">File is too large! Please choose an image under 100KB.</p>
+                    <p class="mt-1 text-xs text-gray-500 text-center">Must be a <b>Square</b> image under 100KB.</p>
+                    <div class="mt-2 p-2 bg-amber-50 border-l-4 border-amber-400 rounded text-xs text-amber-800">
+                        <strong>Mobile Users:</strong> Please select an existing photo from <em>Files/Gallery</em>
+                        instead of taking a live picture.
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-0.5">
+                        Register
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validatePhotoSize(input, previewId) {
+        const errorMsg = document.getElementById('photo-error');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        
+        if (input.files && input.files[0]) {
+            const fileSizeKB = input.files[0].size / 1024;
+            if (fileSizeKB > 100) {
+                // File too large
+                errorMsg.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                input.value = ''; // Clear the invalid file
+                document.getElementById(previewId).classList.add('hidden');
+            } else {
+                // File is fine
+                errorMsg.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                previewImage(input, previewId); // Call the existing preview function
+            }
+        }
+    }
+</script>
+{% endblock %}

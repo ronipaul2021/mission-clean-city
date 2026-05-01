@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-background min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-primary-dark">Admin Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-500">Welcome, <span class="font-bold text-gray-800">{{ admin_name }}</span> (ID: {{ admin_employee_id }})</p>
+                </div>
+                <!-- Navigation -->
+                <div class="flex flex-wrap gap-2">
+                    <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizen Issues</a>
+                    <a href="{% url 'admin_suggestions' %}" class="px-4 py-2 bg-primary text-white rounded-lg font-medium text-sm shadow-sm transition">Citizen Suggestions</a>
+                    <a href="{% url 'admin_citizens_directory' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizens Directory</a>
+                    <a href="{% url 'admin_analytics' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Analytics</a>
+                </div>
+            </div>
+            
+            <!-- Filters Bar -->
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <form action="{% url 'admin_suggestions' %}" method="GET" class="flex flex-col md:flex-row flex-wrap items-center gap-3">
+                    <!-- Search Input -->
+                    <div class="relative w-full md:flex-grow md:max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" name="q" placeholder="Search Ticket, Name, Mobile..." value="{{ search_query }}" class="block w-full pl-9 pr-3 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+                    
+                    <!-- Dropdowns -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <select id="ward" name="ward" class="block w-full sm:w-auto pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Wards</option>
+                            {% for ward in active_wards %}
+                                <option value="{{ ward }}" {% if selected_ward == ward|stringformat:"s" %}selected{% endif %}>Ward {{ ward }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="status" name="status" class="block w-full sm:w-auto pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Statuses</option>
+                            {% for choice in StatusChoices %}
+                                <option value="{{ choice.value }}" {% if selected_status == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="category" name="category" class="block w-full sm:w-auto pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for choice in CategoryChoices %}
+                                <option value="{{ choice.value }}" {% if selected_category == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Pending</p>
+                    <p class="mt-2 text-3xl font-bold text-yellow-600">{{ pending_count }}</p>
+                </div>
+                <div class="p-3 bg-yellow-50 rounded-lg">
+                    <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Accepted</p>
+                    <p class="mt-2 text-3xl font-bold text-green-600">{{ accepted_count }}</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg">
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Rejected</p>
+                    <p class="mt-2 text-3xl font-bold text-red-600">{{ rejected_count }}</p>
+                </div>
+                <div class="p-3 bg-red-50 rounded-lg">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestions Table -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
+            <div class="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 class="text-lg font-bold text-gray-900">Citizen Suggestions</h2>
+                <a href="{% url 'export_suggestions_csv' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+                   class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition-all self-start sm:self-auto">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Export CSV
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Citizen Info</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Improvement Area</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suggestion Details</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preview Image</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status & Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for suggestion in suggestions %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                {% if suggestion.submitted_by %}
+                                    <a href="{% url 'admin_citizen_detail' suggestion.submitted_by.id %}" class="font-bold text-primary hover:underline" title="View Citizen Profile">{{ suggestion.name }}</a>
+                                    <div class="text-xs text-gray-500 mt-1 font-semibold">{{ suggestion.submitted_by.citizen_id }}</div>
+                                {% else %}
+                                    <div class="font-bold">{{ suggestion.name }}</div>
+                                {% endif %}
+                                <div class="text-xs text-gray-500 mt-1">{{ suggestion.mobile_number }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Ward: {{ suggestion.user_ward_number }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                                <span class="px-2 py-1 bg-gray-100 rounded-md font-bold text-gray-700">Ward {{ suggestion.target_ward_number }}</span>
+                                <div class="mt-2 text-xs truncate" title="{{ suggestion.target_address }}">
+                                    {{ suggestion.target_address }}
+                                </div>
+                                {% if suggestion.latitude and suggestion.longitude %}
+                                <div class="mt-2">
+                                    <a href="https://www.google.com/maps?q={{ suggestion.latitude }},{{ suggestion.longitude }}" target="_blank" class="text-secondary hover:underline text-xs inline-flex items-center" title="View on Map">
+                                        <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                                        Map Location
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                                <div class="font-bold text-gray-800">{{ suggestion.get_suggestion_category_display }}</div>
+                                {% if suggestion.description %}
+                                <div class="mt-2 text-xs text-gray-700">
+                                    {% if suggestion.description|wordcount > 8 %}
+                                        <p id="short-s-{{ suggestion.id }}" class="mb-1 leading-relaxed">{{ suggestion.description|truncatewords:8 }}</p>
+                                        <p id="full-s-{{ suggestion.id }}" class="hidden mb-1 leading-relaxed">{{ suggestion.description }}</p>
+                                        <button type="button" onclick="toggleDescWord('s-{{ suggestion.id }}', this)" class="text-primary hover:text-primary-dark font-semibold focus:outline-none">See More</button>
+                                    {% else %}
+                                        <p class="leading-relaxed">{{ suggestion.description }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                <div class="text-xs text-gray-400 mt-2">Submitted: {{ suggestion.submitted_at|date:"M d, Y" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if suggestion.photo %}
+                                    <a href="{{ suggestion.photo.url }}" target="_blank">
+                                        <img src="{{ suggestion.photo.url }}" alt="Preview" class="h-16 w-16 object-cover rounded shadow-sm border border-gray-200 hover:opacity-80 transition">
+                                    </a>
+                                {% else %}
+                                    <span class="text-xs text-gray-400">No Image</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="mb-2">
+                                    <span class="font-bold text-gray-800">{{ suggestion.ticket_number }}</span>
+                                </div>
+                                <div class="mb-3 flex justify-between items-center gap-2">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if suggestion.status == 'ACCEPTED' %} bg-green-100 text-green-800
+                                        {% elif suggestion.status == 'PENDING' %} bg-yellow-100 text-yellow-800
+                                        {% elif suggestion.status == 'REJECTED' %} bg-red-100 text-red-800
+                                        {% endif %}">
+                                        {{ suggestion.get_status_display }}
+                                    </span>
+                                    <a href="{% url 'print_suggestion' suggestion.id %}" target="_blank" class="text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition shadow-sm border border-gray-200">
+                                        🖨️ Print
+                                    </a>
+                                </div>
+                                {% if suggestion.status == 'PENDING' %}
+                                    <form action="{% url 'admin_suggestions' %}" method="POST" class="flex flex-col gap-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="suggestion_id" value="{{ suggestion.id }}">
+                                        {% if selected_ward %}<input type="hidden" name="ward" value="{{ selected_ward }}">{% endif %}
+                                        {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+                                        {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                                        {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                                        {% if page_obj.number %}<input type="hidden" name="page" value="{{ page_obj.number }}">{% endif %}
+                                        <div class="flex gap-2">
+                                            <button type="submit" name="new_status" value="ACCEPTED" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition">Accept</button>
+                                            <button type="submit" name="new_status" value="REJECTED" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition">Reject</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                No suggestions found for this selection.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-sm text-gray-500">
+                    Showing <span class="font-semibold">{{ page_obj.start_index }}</span>–<span class="font-semibold">{{ page_obj.end_index }}</span>
+                    of <span class="font-semibold">{{ page_obj.paginator.count }}</span> suggestions
+                </p>
+                <nav class="flex items-center gap-1">
+                    {% if page_obj.has_previous %}
+                        <button onclick="paginate('{{ page_obj.previous_page_number }}')" class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium">
+                            &laquo; Prev
+                        </button>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="px-3 py-1.5 text-sm rounded-lg bg-primary text-white font-bold">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <button onclick="paginate('{{ num }}')" class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium">
+                                {{ num }}
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <button onclick="paginate('{{ page_obj.next_page_number }}')" class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium">
+                            Next &raquo;
+                        </button>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            {% endif %}
+
+        <script>
+        function paginate(pageNum) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('page', pageNum);
+            window.location.search = urlParams.toString();
+        }
+
+        function toggleDescWord(id, btn) {
+            const shortEl = document.getElementById('short-' + id);
+            const fullEl = document.getElementById('full-' + id);
+            if (shortEl.classList.contains('hidden')) {
+                shortEl.classList.remove('hidden');
+                fullEl.classList.add('hidden');
+                btn.innerText = 'See More';
+            } else {
+                shortEl.classList.add('hidden');
+                fullEl.classList.remove('hidden');
+                btn.innerText = 'See Less';
+            }
+        }
+        </script>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+

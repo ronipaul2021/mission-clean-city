@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-background min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-primary-dark">Admin Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-500">Welcome, <span class="font-bold text-gray-800">{{ admin_name }}</span> (ID: {{ admin_employee_id }})</p>
+                </div>
+                <!-- Navigation -->
+                <div class="flex flex-wrap gap-2">
+                    <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-primary text-white rounded-lg font-medium text-sm shadow-sm transition">Citizen Issues</a>
+                    <a href="{% url 'admin_suggestions' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizen Suggestions</a>
+                    <a href="{% url 'admin_citizens_directory' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizens Directory</a>
+                    <a href="{% url 'admin_analytics' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Analytics</a>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <form action="{% url 'admin_dashboard' %}" method="GET" class="flex flex-col md:flex-row flex-wrap items-center gap-3">
+                    <!-- Search Input (full-text: ID, name, mobile, description, address, notes) -->
+                    <div class="relative w-full md:flex-grow md:max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" name="q" placeholder="Search ID, Name, Mobile, Description, Address…" value="{{ search_query }}" class="block w-full pl-9 pr-3 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+
+                    <!-- Dropdowns -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <select id="ward" name="ward" class="block pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow-sm bg-gray-50 cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Wards</option>
+                            {% for ward in active_wards %}
+                            <option value="{{ ward }}" {% if selected_ward == ward|stringformat:"s" %}selected{% endif %}>Ward {{ ward }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="status" name="status" class="block pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow-sm bg-gray-50 cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Statuses</option>
+                            {% for choice in StatusChoices %}
+                            <option value="{{ choice.value }}" {% if selected_status == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="category" name="category" class="block pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow-sm bg-gray-50 cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for choice in CategoryChoices %}
+                            <option value="{{ choice.value }}" {% if selected_category == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="priority" class="block pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg shadow-sm bg-gray-50 cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Priorities</option>
+                            {% for p in PriorityChoices %}
+                            <option value="{{ p.value }}" {% if selected_priority == p.value %}selected{% endif %}>{{ p.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range + Actions -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <label class="text-xs text-gray-500 font-semibold">From:</label>
+                        <input type="date" name="date_from" value="{{ date_from }}" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:ring-primary focus:border-primary">
+                        <label class="text-xs text-gray-500 font-semibold">To:</label>
+                        <input type="date" name="date_to" value="{{ date_to }}" class="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:ring-primary focus:border-primary">
+                        <button type="submit" class="px-4 py-1.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-dark transition shadow-sm">Search</button>
+                        {% if active_filter_count > 0 %}
+                        <a href="{% url 'admin_dashboard' %}" class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 border border-red-200 transition">✕ Clear ({{ active_filter_count }})</a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Preset Buttons -->
+                    <div class="flex flex-wrap gap-2 w-full pt-2 border-t border-gray-100 mt-1">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider self-center mr-1">Quick Filters:</span>
+                        <a href="?preset=pending_urgent"    class="px-3 py-1 text-xs font-bold rounded-full border transition {% if selected_preset == 'pending_urgent' %}bg-red-600 text-white border-red-600{% else %}text-red-600 border-red-200 hover:bg-red-50{% endif %}">🔴 Urgent &amp; Pending</a>
+                        <a href="?preset=in_progress"       class="px-3 py-1 text-xs font-bold rounded-full border transition {% if selected_preset == 'in_progress' %}bg-blue-600 text-white border-blue-600{% else %}text-blue-600 border-blue-200 hover:bg-blue-50{% endif %}">🔵 In Progress</a>
+                        <a href="?preset=unrated_resolved"  class="px-3 py-1 text-xs font-bold rounded-full border transition {% if selected_preset == 'unrated_resolved' %}bg-green-600 text-white border-green-600{% else %}text-green-600 border-green-200 hover:bg-green-50{% endif %}">⭐ Unrated Resolved</a>
+                        <a href="?preset=appealed"          class="px-3 py-1 text-xs font-bold rounded-full border transition {% if selected_preset == 'appealed' %}bg-orange-600 text-white border-orange-600{% else %}text-orange-600 border-orange-200 hover:bg-orange-50{% endif %}">⚖️ Appealed</a>
+                        <a href="?preset=today"             class="px-3 py-1 text-xs font-bold rounded-full border transition {% if selected_preset == 'today' %}bg-purple-600 text-white border-purple-600{% else %}text-purple-600 border-purple-200 hover:bg-purple-50{% endif %}">📅 Today's Issues</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-sm font-medium text-gray-500">Pending</p><p class="mt-2 text-3xl font-bold text-red-600">{{ pending_count }}</p></div>
+                <div class="p-3 bg-red-50 rounded-lg"><svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-sm font-medium text-gray-500">In Progress</p><p class="mt-2 text-3xl font-bold text-yellow-600">{{ in_progress_count }}</p></div>
+                <div class="p-3 bg-yellow-50 rounded-lg"><svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-sm font-medium text-gray-500">Solved</p><p class="mt-2 text-3xl font-bold text-green-600">{{ solved_count }}</p></div>
+                <div class="p-3 bg-green-50 rounded-lg"><svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-sm font-medium text-gray-500">Terminated</p><p class="mt-2 text-3xl font-bold text-gray-600">{{ terminated_count }}</p></div>
+                <div class="p-3 bg-gray-50 rounded-lg"><svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+            </div>
+        </div>
+
+        <!-- Responsive Table Container -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
+            <div class="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 class="text-lg font-bold text-gray-900">Citizen Issues</h2>
+                <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto flex-wrap">
+                    <span class="text-xs text-gray-500 font-medium uppercase tracking-wider">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    <a href="?export=csv{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}"
+                       class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bulk Action Bar -->
+            <form id="bulk-form" action="{% url 'admin_dashboard' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk_update">
+                {% if selected_ward %}<input type="hidden" name="ward" value="{{ selected_ward }}">{% endif %}
+                {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+                {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                {% if selected_priority %}<input type="hidden" name="priority" value="{{ selected_priority }}">{% endif %}
+                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                {% if date_from %}<input type="hidden" name="date_from" value="{{ date_from }}">{% endif %}
+                {% if date_to %}<input type="hidden" name="date_to" value="{{ date_to }}">{% endif %}
+                {% if selected_preset %}<input type="hidden" name="preset" value="{{ selected_preset }}">{% endif %}
+                <!-- Hidden container for complaint IDs populated by JS -->
+                <div id="bulk-hidden-inputs"></div>
+
+                <div id="bulk-bar" class="hidden px-4 py-3 bg-blue-50 border-b border-blue-200 flex flex-wrap items-center gap-3">
+                    <span id="bulk-count" class="text-sm font-semibold text-blue-700">0 selected</span>
+                    <select name="bulk_status" class="text-sm border border-blue-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary bg-white" onchange="document.getElementById('bulk_photo').required = (this.value === 'RESOLVED');">
+                        <option value="" disabled selected>Set status…</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="TERMINATED">Terminated</option>
+                    </select>
+                    <select name="bulk_priority" class="text-sm border border-blue-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary bg-white">
+                        <option value="">Priority (optional)</option>
+                        {% for p in PriorityChoices %}<option value="{{ p.value }}">{{ p.label }}</option>{% endfor %}
+                    </select>
+                    <input type="text" name="bulk_notes" placeholder="Resolution note (optional)" class="text-sm border border-blue-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex-1 min-w-[180px]">
+
+                    <button type="submit" class="bg-primary text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-primary-dark transition">Apply to Selected</button>
+                    <button type="button" onclick="clearSelection()" class="text-sm text-gray-500 hover:text-gray-700 underline">Clear</button>
+                </div>
+            </form>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-left">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">
+                                <input type="checkbox" id="select-all" title="Select all" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Citizen Info</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location &amp; ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proof</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action &amp; Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for complaint in complaints %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-4">
+                                {% if complaint.status != 'RESOLVED' and complaint.status != 'TERMINATED' %}
+                                <input type="checkbox" name="complaint_ids" value="{{ complaint.id }}"
+                                    class="row-check h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer">
+                                {% endif %}
+                            </td>
+                            <!-- 1. Citizen Information -->
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                <a href="{% url 'admin_citizen_detail' complaint.citizen.id %}" class="font-bold text-primary hover:underline" title="View Citizen Profile">{{ complaint.citizen.name }}</a>
+                                <div class="text-xs text-gray-500 font-semibold mt-1">{{ complaint.citizen.citizen_id }}</div>
+                                <div class="text-xs text-gray-500">{{ complaint.citizen.mobile_number }}</div>
+                                <div class="text-xs text-gray-500">Ward: {{ complaint.ward_number }}</div>
+                            </td>
+                            
+                            <!-- 2. Location & ID -->
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                                <div class="mb-2">
+                                    <span class="font-bold text-gray-800">{{ complaint.problem_id }}</span>
+                                </div>
+                                <div class="mt-2 text-xs truncate" title="{{ complaint.target_address }}">
+                                    {{ complaint.target_address }}
+                                </div>
+                                {% if complaint.latitude and complaint.longitude %}
+                                <div class="mt-2">
+                                    <a href="https://www.google.com/maps?q={{ complaint.latitude }},{{ complaint.longitude }}" target="_blank" class="text-secondary hover:underline text-xs inline-flex items-center" title="View on Map">
+                                        <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                                        Map Location
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 3. Details -->
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+                                <div class="font-bold text-gray-800">{{ complaint.get_category_display }}</div>
+                                {% if complaint.sub_category %}
+                                <div class="text-xs text-gray-500 italic mt-0.5">{{ complaint.sub_category }}</div>
+                                {% endif %}
+                                <div class="mt-2 text-xs text-gray-700">
+                                    {% if complaint.description|wordcount > 8 %}
+                                        <p id="short-c-{{ complaint.id }}" class="mb-1 leading-relaxed">{{ complaint.description|truncatewords:8 }}</p>
+                                        <p id="full-c-{{ complaint.id }}" class="hidden mb-1 leading-relaxed">{{ complaint.description }}</p>
+                                        <button type="button" onclick="toggleDescWord('c-{{ complaint.id }}', this)" class="text-primary hover:text-primary-dark font-semibold focus:outline-none">See More</button>
+                                    {% else %}
+                                        <p class="leading-relaxed">{{ complaint.description }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if complaint.appeal_text %}
+                                <div class="mt-3 bg-red-50 border border-red-200 rounded p-2">
+                                    <p class="text-xs font-bold text-red-800 mb-1">Appeal Reason:</p>
+                                    {% if complaint.appeal_text|wordcount > 15 %}
+                                        <p id="short-appeal-{{ complaint.id }}" class="text-xs text-red-700 italic leading-relaxed">{{ complaint.appeal_text|truncatewords:15 }}</p>
+                                        <p id="full-appeal-{{ complaint.id }}" class="hidden text-xs text-red-700 italic leading-relaxed">{{ complaint.appeal_text }}</p>
+                                        <button type="button" onclick="toggleDescWord('appeal-{{ complaint.id }}', this)" class="text-red-800 hover:text-red-900 font-semibold text-[10px] focus:outline-none mt-1 uppercase tracking-wider">See More</button>
+                                    {% else %}
+                                        <p class="text-xs text-red-700 italic leading-relaxed">{{ complaint.appeal_text }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <div class="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">Submitted: {{ complaint.submitted_at|date:"M d, Y" }}</div>
+                            </td>
+                            
+                            <!-- 4. Proof -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex flex-wrap gap-1 max-w-[120px]">
+                                    {% if complaint.photo1 %}
+                                    <a href="{{ complaint.photo1.url }}" target="_blank">
+                                        <img src="{{ complaint.photo1.url }}" class="h-12 w-12 object-cover rounded shadow-sm border border-gray-200 hover:opacity-80 transition">
+                                    </a>
+                                    {% endif %}
+                                    {% if complaint.photo2 %}
+                                    <a href="{{ complaint.photo2.url }}" target="_blank">
+                                        <img src="{{ complaint.photo2.url }}" class="h-12 w-12 object-cover rounded shadow-sm border border-gray-200 hover:opacity-80 transition">
+                                    </a>
+                                    {% endif %}
+                                    {% if complaint.photo3 %}
+                                    <a href="{{ complaint.photo3.url }}" target="_blank">
+                                        <img src="{{ complaint.photo3.url }}" class="h-12 w-12 object-cover rounded shadow-sm border border-gray-200 hover:opacity-80 transition">
+                                    </a>
+                                    {% endif %}
+                                    {% if complaint.video %}
+                                    <a href="{{ complaint.video.url }}" target="_blank" class="h-12 w-12 bg-gray-100 rounded shadow-sm flex items-center justify-center border border-gray-200 hover:bg-gray-200 transition">
+                                        <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- 5. Rating -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {% if complaint.rating %}
+                                <div class="flex text-yellow-400 text-sm mb-1">
+                                    {% for i in "12345" %}{% if forloop.counter <= complaint.rating %}★{% else %}<span class="text-gray-300">★</span>{% endif %}{% endfor %}
+                                </div>
+                                <div class="text-xs text-gray-500">Rated</div>
+                                {% else %}
+                                <span class="text-xs text-gray-400">Not Rated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- 6. Action & Status -->
+                            <td class="px-6 py-4 text-sm font-medium min-w-[180px]">
+                                <!-- Priority badge -->
+                                {% if complaint.priority and complaint.priority != 'LOW' %}
+                                <div class="mb-1">
+                                    <span class="px-2 py-0.5 rounded text-xs font-bold
+                                        {% if complaint.priority == 'URGENT' %}bg-red-100 text-red-700
+                                        {% elif complaint.priority == 'HIGH' %}bg-orange-100 text-orange-700
+                                        {% elif complaint.priority == 'MEDIUM' %}bg-blue-100 text-blue-700
+                                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                        ⚡ {{ complaint.get_priority_display }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <div class="mb-2 flex justify-between items-center gap-2">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if complaint.status == 'RESOLVED' %} bg-green-100 text-green-800
+                                        {% elif complaint.status == 'PENDING' %} bg-yellow-100 text-yellow-800
+                                        {% elif complaint.status == 'IN_PROGRESS' %} bg-blue-100 text-blue-800
+                                        {% elif complaint.status == 'TERMINATED' %} bg-red-100 text-red-800
+                                        {% endif %}">
+                                        {{ complaint.get_status_display }}
+                                    </span>
+                                    <a href="{% url 'print_work_order' complaint.id %}" target="_blank" class="text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider transition shadow-sm border border-gray-200">
+                                        🖨️ Print
+                                    </a>
+                                </div>
+                                {% if complaint.resolution_notes %}
+                                <div class="text-xs text-gray-500 italic mb-2 border-l-2 border-gray-300 pl-2">{{ complaint.resolution_notes|truncatewords:12 }}</div>
+                                {% endif %}
+                                {% if complaint.status == 'RESOLVED' or complaint.status == 'TERMINATED' %}
+                                <div class="text-xs text-gray-500 italic mt-2">
+                                    Status Locked
+                                </div>
+                                {% else %}
+                                <form action="{% url 'admin_dashboard' %}" method="POST" enctype="multipart/form-data" class="bg-gray-50 border border-gray-200 rounded-lg p-2.5 flex flex-col gap-2 shadow-sm">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="complaint_id" value="{{ complaint.id }}">
+                                    {% if selected_ward %}<input type="hidden" name="ward" value="{{ selected_ward }}">{% endif %}
+                                    {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+                                    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                                    {% if selected_priority %}<input type="hidden" name="priority" value="{{ selected_priority }}">{% endif %}
+                                    {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                                    {% if date_from %}<input type="hidden" name="date_from" value="{{ date_from }}">{% endif %}
+                                    {% if date_to %}<input type="hidden" name="date_to" value="{{ date_to }}">{% endif %}
+                                    {% if selected_preset %}<input type="hidden" name="preset" value="{{ selected_preset }}">{% endif %}
+                                    {% if page_obj.number %}<input type="hidden" name="page" value="{{ page_obj.number }}">{% endif %}
+                                    
+                                    <select name="new_status" class="block w-full px-2 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded border bg-white shadow-sm" onchange="toggleNotes(this)">
+                                        <option value="" disabled selected>Update Status...</option>
+                                        {% if complaint.status == 'PENDING' %}
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="RESOLVED">Resolved</option>
+                                        <option value="TERMINATED">Terminate</option>
+                                        {% elif complaint.status == 'IN_PROGRESS' %}
+                                        <option value="RESOLVED">Resolved</option>
+                                        <option value="TERMINATED">Terminate</option>
+                                        {% endif %}
+                                    </select>
+                                    
+                                    <select name="priority" class="block w-full px-2 py-1.5 text-xs border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded border bg-white shadow-sm">
+                                        <option value="">Set Priority…</option>
+                                        {% for p in PriorityChoices %}<option value="{{ p.value }}" {% if complaint.priority == p.value %}selected{% endif %}>{{ p.label }}</option>{% endfor %}
+                                    </select>
+                                    
+                                    <textarea name="resolution_notes" rows="2" placeholder="Resolution note (optional)" class="notes-field hidden block w-full text-xs border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none bg-white shadow-sm">{{ complaint.resolution_notes|default:'' }}</textarea>
+                                    
+                                    <input type="file" name="resolution_photo" accept="image/*" class="notes-field hidden block w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                                    
+                                    <button type="submit" class="w-full text-xs bg-primary text-white font-semibold py-1.5 rounded-md hover:bg-primary-dark transition shadow-sm mt-0.5">Save Changes</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                {% if page_obj.has_previous %}
+                <button type="button" onclick="paginate('{{ page_obj.previous_page_number }}')" class="text-xs sm:text-sm font-medium text-gray-700 hover:text-primary">← Prev</button>
+                {% else %}<span></span>{% endif %}
+                <span class="text-[10px] sm:text-sm text-gray-500 text-center">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <button type="button" onclick="paginate('{{ page_obj.next_page_number }}')" class="text-xs sm:text-sm font-medium text-gray-700 hover:text-primary">Next →</button>
+                {% else %}<span></span>{% endif %}
+            </div>
+
+            <script>
+            function paginate(pageNum) {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', pageNum);
+                window.location.search = urlParams.toString();
+            }
+
+            function toggleDescWord(id, btn) {
+                const shortEl = document.getElementById('short-' + id);
+                const fullEl = document.getElementById('full-' + id);
+                if (shortEl.classList.contains('hidden')) {
+                    shortEl.classList.remove('hidden');
+                    fullEl.classList.add('hidden');
+                    btn.innerText = 'See More';
+                } else {
+                    shortEl.classList.add('hidden');
+                    fullEl.classList.remove('hidden');
+                    btn.innerText = 'See Less';
+                }
+            }
+
+            // Show notes textarea only when Resolved/Terminated is chosen
+            function toggleNotes(sel) {
+                const form   = sel.closest('form');
+                const fields = form.querySelectorAll('.notes-field');
+                const needsNote = ['RESOLVED', 'TERMINATED'].includes(sel.value);
+                
+                fields.forEach(f => {
+                    f.classList.toggle('hidden', !needsNote);
+                    if (f.type === 'file') {
+                        f.required = (sel.value === 'RESOLVED');
+                    }
+                });
+                
+                // Auto-submit only when NOT needing a note
+                if (!needsNote) form.submit();
+            }
+
+            // Bulk selection
+            const selectAll  = document.getElementById('select-all');
+            const bulkBar    = document.getElementById('bulk-bar');
+            const bulkCount  = document.getElementById('bulk-count');
+
+            function updateBulkBar() {
+                const checked = document.querySelectorAll('.row-check:checked');
+                const count   = checked.length;
+                bulkCount.textContent = count + ' selected';
+                bulkBar.classList.toggle('hidden', count === 0);
+                bulkBar.classList.toggle('flex',   count > 0);
+            }
+
+            function clearSelection() {
+                document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+                if (selectAll) selectAll.checked = false;
+                updateBulkBar();
+            }
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+                    updateBulkBar();
+                });
+            }
+
+            document.querySelectorAll('.row-check').forEach(cb => {
+                cb.addEventListener('change', updateBulkBar);
+            });
+
+            const bulkForm = document.getElementById('bulk-form');
+            if (bulkForm) {
+                bulkForm.addEventListener('submit', function(e) {
+                    const hiddenContainer = document.getElementById('bulk-hidden-inputs');
+                    hiddenContainer.innerHTML = ''; // clear previous
+                    const checked = document.querySelectorAll('.row-check:checked');
+                    if (checked.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one complaint.');
+                        return;
+                    }
+                    checked.forEach(cb => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'complaint_ids';
+                        input.value = cb.value;
+                        hiddenContainer.appendChild(input);
+                    });
+                });
+            }
+            </script>
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

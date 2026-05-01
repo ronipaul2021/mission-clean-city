@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-background min-h-[80vh] py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Citizen Profile Card -->
+        {% if user.is_authenticated and user.role == 'CITIZEN' %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
+            {% if user.profile_photo %}
+            <img src="{{ user.profile_photo.url }}" alt="{{ user.name }}" class="w-24 h-24 object-cover rounded-full shadow-md shrink-0 border-2 border-primary">
+            {% else %}
+            <div class="w-24 h-24 bg-primary-dark text-white rounded-full flex items-center justify-center text-3xl font-extrabold shadow-md shrink-0 border-2 border-primary">
+                {{ user.name|make_list|first|upper }}
+            </div>
+            {% endif %}
+            
+            <div class="flex-1 text-center md:text-left">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ user.name }}</h2>
+                        <span class="inline-block mt-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-md font-medium text-xs border border-blue-100">
+                            ID: <span class="font-bold">{% if user.citizen_id %}{{ user.citizen_id }}{% else %}BM-PENDING{% endif %}</span>
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center self-center">
+                        {% if user.citizen_id %}
+                        <div class="bg-white p-1.5 rounded border border-gray-100 shadow-sm">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=Name:{{ user.name }}%0A ID:{{ user.citizen_id }}%0AMobile:{{ user.mobile_number }}%0AWard:{{ user.ward_number }}%0AAddress:{{ user.address }}" alt="QR Code" class="h-16 w-16">
+                        </div>
+                        {% endif %}
+                        <a href="{% url 'profile_edit' %}" class="inline-flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm hover:bg-primary-dark transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Mobile Number</p>
+                        <p class="font-semibold text-gray-800">{{ user.mobile_number }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Aadhaar Number</p>
+                        <p class="font-semibold text-gray-800 tracking-wider">
+                            {% if user.encrypted_aadhaar %}
+                                XXXX-XXXX-{{ user.encrypted_aadhaar|slice:"-4:" }}
+                            {% else %}
+                                <span class="text-gray-400">Not provided</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Ward Number</p>
+                        <p class="font-semibold text-gray-800">{{ user.ward_number }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Reports</p>
+                        <p class="font-semibold text-gray-800">{{ user_complaints|length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Search Bar -->
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-secondary opacity-10 rounded-full blur-xl -mr-10 -mt-10"></div>
+            <h2 class="text-2xl font-extrabold text-primary-dark mb-4">Track an Issue</h2>
+            <form action="{% url 'citizen_tracking' %}" method="GET" class="flex flex-col sm:flex-row gap-4 relative z-10">
+                <input type="text" name="problem_id" placeholder="Enter Problem ID (e.g., BIR-WARD4-1029)" class="flex-1 appearance-none block w-full px-5 py-4 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-base">
+                <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-lg font-bold transition-all shadow-md transform hover:-translate-y-0.5">Search</button>
+            </form>
+        </div>
+
+        <!-- Search Result -->
+        {% if searched_complaint %}
+        <div class="bg-white rounded-2xl shadow-md border-l-4 border-primary p-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Issue ID: {{ searched_complaint.problem_id }}</h3>
+                    <p class="text-sm text-gray-500">Submitted on {{ searched_complaint.submitted_at|date:"M d, Y" }}</p>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
+                    {% if searched_complaint.status == 'RESOLVED' %} bg-green-100 text-green-800
+                    {% elif searched_complaint.status == 'IN_PROGRESS' %} bg-yellow-100 text-yellow-800
+                    {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                    {{ searched_complaint.get_status_display }}
+                </span>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4 mb-4 text-gray-700">
+                <p><strong>Category:</strong> {{ searched_complaint.get_category_display }}</p>
+                {% if searched_complaint.sub_category %}
+                <p><strong>Sub-category:</strong> {{ searched_complaint.sub_category }}</p>
+                {% endif %}
+                <p class="mt-2"><strong>Ward:</strong> {{ searched_complaint.ward_number }}</p>
+                <p class="mt-2">{{ searched_complaint.description }}</p>
+            </div>
+
+            {% if searched_complaint.resolved_at %}
+                <div class="mt-4 text-sm text-green-600 font-medium">
+                    Resolved on: {{ searched_complaint.resolved_at|date:"M d, Y" }}
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- User History Tabs — Always visible for logged-in citizens -->
+        {% if user.is_authenticated and user.role == 'CITIZEN' %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">My Submission History</h2>
+
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-gray-200 mb-6 space-x-4">
+                <button id="tab-issues-btn" onclick="showTab('issues')" class="py-2 px-4 border-b-2 font-semibold text-sm transition-colors border-primary text-primary">
+                    Issues Reported
+                    {% if user_complaints %}<span class="ml-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded-full">{{ user_complaints|length }}</span>{% endif %}
+                </button>
+                <button id="tab-suggestions-btn" onclick="showTab('suggestions')" class="py-2 px-4 border-b-2 font-semibold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Submitted Suggestions
+                    {% if user_suggestions %}<span class="ml-1 bg-gray-400 text-white text-xs px-1.5 py-0.5 rounded-full">{{ user_suggestions|length }}</span>{% endif %}
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="tab-issues" class="block">
+                <!-- Filters -->
+                <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                    <form method="GET" action="{% url 'citizen_tracking' %}" class="flex flex-col sm:flex-row gap-4 items-end w-full">
+                        <div class="flex-1 w-full">
+                            <label for="filter_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select id="filter_status" name="filter_status" class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-primary focus:border-primary sm:text-sm" onchange="this.form.submit()">
+                                <option value="">All Statuses</option>
+                                {% for val, name in statuses %}
+                                <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="flex-1 w-full">
+                            <label for="filter_category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="filter_category" name="filter_category" class="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-primary focus:border-primary sm:text-sm" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                {% for val, name in categories %}
+                                <option value="{{ val }}" {% if filter_category == val %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                {% if user_complaints %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <ul class="divide-y divide-gray-200">
+                        {% for complaint in user_complaints %}
+                        <li class="p-6 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-medium text-primary truncate">
+                                    <a href="{% url 'citizen_complaint_detail' complaint.id %}" class="hover:underline font-bold">{{ complaint.problem_id }}</a> - {{ complaint.get_category_display }}
+                                </div>
+                                <div class="ml-2 flex-shrink-0 flex items-center gap-2">
+                                    {% if complaint.priority and complaint.priority != 'LOW' %}
+                                    <span class="px-2 py-0.5 rounded text-xs font-bold
+                                        {% if complaint.priority == 'URGENT' %}bg-red-100 text-red-700
+                                        {% elif complaint.priority == 'HIGH' %}bg-orange-100 text-orange-700
+                                        {% elif complaint.priority == 'MEDIUM' %}bg-blue-100 text-blue-700{% endif %}">
+                                        &#9889; {{ complaint.get_priority_display }}
+                                    </span>
+                                    {% endif %}
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if complaint.status == 'RESOLVED' %} bg-green-100 text-green-800
+                                        {% elif complaint.status == 'IN_PROGRESS' %} bg-yellow-100 text-yellow-800
+                                        {% elif complaint.status == 'TERMINATED' %} bg-red-100 text-red-800
+                                        {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                        {{ complaint.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex text-sm text-gray-500">
+                                    <p class="truncate max-w-md">{{ complaint.description }}</p>
+                                </div>
+                                <div class="mt-2 flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 sm:mt-0 gap-2 sm:gap-4">
+                                    <p>Submitted on <time>{{ complaint.submitted_at|date:"M d, Y" }}</time></p>
+                                    <a href="{% url 'citizen_complaint_detail' complaint.id %}" class="inline-flex text-primary hover:text-primary-dark font-semibold text-xs bg-blue-50 px-2.5 py-1 rounded border border-blue-200 transition self-start sm:self-auto">View Full Details &rarr;</a>
+                                </div>
+                            </div>
+                            {% if complaint.resolution_notes %}
+                            <div class="mt-2 px-3 py-2 bg-green-50 border-l-4 border-green-400 rounded-r-lg text-xs text-green-800">
+                                <span class="font-semibold">&#128203; Admin Note:</span> {{ complaint.resolution_notes }}
+                            </div>
+                            {% endif %}
+
+                            {% if complaint.status == 'RESOLVED' %}
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                {% if complaint.rating %}
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-medium text-gray-500">Your Rating:</span>
+                                        <span class="flex gap-0.5">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= complaint.rating %}
+                                                    <span class="text-yellow-400 text-xl">★</span>
+                                                {% else %}
+                                                    <span class="text-gray-300 text-xl">★</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="text-xs text-gray-500">({{ complaint.rating }}/5)</span>
+                                    </div>
+                                {% else %}
+                                    <p class="text-xs font-medium text-gray-600 mb-2">Rate the resolution quality:</p>
+                                    <form method="POST" action="{% url 'rate_complaint' complaint.id %}" class="flex items-center gap-3">
+                                        {% csrf_token %}
+                                        <div class="flex flex-row-reverse gap-0.5" id="stars-{{ complaint.id }}">
+                                            {% for val in "54321" %}
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="rating" value="{{ val }}" class="sr-only" required>
+                                                <span class="text-2xl text-gray-300 hover:text-yellow-400 peer-checked:text-yellow-400 transition-colors duration-100 star-label" data-val="{{ val }}">★</span>
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                        <button type="submit" class="text-xs bg-primary text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-primary-dark transition">
+                                            Submit Rating
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {# Reopen section: show for unrated OR rating 1-3. View enforces 7-day deadline. #}
+                                {% if complaint.reopened_at %}
+                                    <div class="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                Re-open Locked
+                                            </span>
+                                            <span class="text-xs text-gray-400">This complaint has already been re-opened once and cannot be re-opened again.</span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    {% if complaint.rating %}
+                                        {% if complaint.rating <= 3 %}
+                                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                                <p class="text-xs text-gray-500 mb-1">
+                                                    Not satisfied? You can re-open this issue within 7 days of resolution.
+                                                </p>
+                                                <form method="POST" action="{% url 'reopen_complaint' complaint.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit"
+                                                        onclick="return confirm('Are you sure the issue is not resolved? This will re-open the complaint for investigation.')"
+                                                        class="inline-flex items-center gap-1.5 text-xs bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg font-semibold transition">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                        </svg>
+                                                        Re-open Issue
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% else %}
+                                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                        Re-open Locked
+                                                    </span>
+                                                    <span class="text-xs text-gray-400">You rated {{ complaint.rating }}/5 ⭐ — satisfied resolutions cannot be re-opened.</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="mt-3 pt-3 border-t border-dashed border-gray-200">
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                    Re-open Locked
+                                                </span>
+                                                <span class="text-xs text-gray-400">Please submit your rating above before you can re-open this complaint.</span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% if user_complaints.has_other_pages %}
+                <div class="mt-6 flex justify-center">
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if user_complaints.has_previous %}
+                        <a href="?page_issues={{ user_complaints.previous_page_number }}&filter_status={{ filter_status }}&filter_category={{ filter_category }}" class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            &laquo; Prev
+                        </a>
+                        {% endif %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            Page {{ user_complaints.number }} of {{ user_complaints.paginator.num_pages }}
+                        </span>
+                        {% if user_complaints.has_next %}
+                        <a href="?page_issues={{ user_complaints.next_page_number }}&filter_status={{ filter_status }}&filter_category={{ filter_category }}" class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Next &raquo;
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-gray-500 font-medium">No issues reported yet.</p>
+                    <p class="text-gray-400 text-sm mt-1">When you report a civic problem, it will appear here.</p>
+                    <a href="{% url 'submit_problem' %}" class="mt-4 inline-block bg-primary text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition">Report an Issue</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="tab-suggestions" class="hidden">
+                {% if user_suggestions %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <ul class="divide-y divide-gray-200">
+                        {% for suggestion in user_suggestions %}
+                        <li class="p-6 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-medium text-secondary truncate">
+                                    {{ suggestion.ticket_number }} - {{ suggestion.get_suggestion_category_display }}
+                                </div>
+                                <div class="ml-2 flex-shrink-0 flex">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if suggestion.status == 'ACCEPTED' %} bg-green-100 text-green-800
+                                        {% elif suggestion.status == 'REJECTED' %} bg-red-100 text-red-800
+                                        {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                                        {{ suggestion.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex flex-col text-sm text-gray-500">
+                                    <p class="truncate max-w-md">Target: Ward {{ suggestion.target_ward_number }} - {{ suggestion.target_address }}</p>
+                                    {% if suggestion.description %}
+                                    <div class="mt-1 text-xs text-gray-700">
+                                        {% if suggestion.description|wordcount > 8 %}
+                                            <p id="short-cs-{{ suggestion.id }}" class="mb-1 leading-relaxed">{{ suggestion.description|truncatewords:8 }}</p>
+                                            <p id="full-cs-{{ suggestion.id }}" class="hidden mb-1 leading-relaxed">{{ suggestion.description }}</p>
+                                            <button type="button" onclick="toggleDescWord('cs-{{ suggestion.id }}', this)" class="text-primary hover:text-primary-dark font-semibold focus:outline-none">See More</button>
+                                        {% else %}
+                                            <p class="leading-relaxed">{{ suggestion.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                    <p>Submitted on <time>{{ suggestion.submitted_at|date:"M d, Y" }}</time></p>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% if user_suggestions.has_other_pages %}
+                <div class="mt-6 flex justify-center">
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if user_suggestions.has_previous %}
+                        <a href="?page_suggestions={{ user_suggestions.previous_page_number }}&filter_status={{ filter_status }}&filter_category={{ filter_category }}" class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            &laquo; Prev
+                        </a>
+                        {% endif %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            Page {{ user_suggestions.number }} of {{ user_suggestions.paginator.num_pages }}
+                        </span>
+                        {% if user_suggestions.has_next %}
+                        <a href="?page_suggestions={{ user_suggestions.next_page_number }}&filter_status={{ filter_status }}&filter_category={{ filter_category }}" class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            Next &raquo;
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    <p class="text-gray-500 font-medium">No suggestions submitted yet.</p>
+                    <p class="text-gray-400 text-sm mt-1">Have an idea to improve the city? Share it with the municipality.</p>
+                    <a href="{% url 'suggestions' %}" class="mt-4 inline-block bg-secondary text-primary-dark text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition">Submit a Suggestion</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <script>
+                function showTab(tabName) {
+                    document.getElementById('tab-issues').classList.add('hidden');
+                    document.getElementById('tab-suggestions').classList.add('hidden');
+                    document.getElementById('tab-issues-btn').className = 'py-2 px-4 border-b-2 font-semibold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+                    document.getElementById('tab-suggestions-btn').className = 'py-2 px-4 border-b-2 font-semibold text-sm transition-colors border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+                    document.getElementById('tab-' + tabName).classList.remove('hidden');
+                    document.getElementById('tab-' + tabName + '-btn').className = 'py-2 px-4 border-b-2 font-semibold text-sm transition-colors border-primary text-primary';
+                }
+
+                function toggleDescWord(id, btn) {
+                    const shortEl = document.getElementById('short-' + id);
+                    const fullEl  = document.getElementById('full-' + id);
+                    if (shortEl.classList.contains('hidden')) {
+                        shortEl.classList.remove('hidden');
+                        fullEl.classList.add('hidden');
+                        btn.innerText = 'See More';
+                    } else {
+                        shortEl.classList.add('hidden');
+                        fullEl.classList.remove('hidden');
+                        btn.innerText = 'See Less';
+                    }
+                }
+
+                // Star rating interactivity — hover glow + click select
+                document.querySelectorAll('[id^="stars-"]').forEach(function(container) {
+                    const stars = container.querySelectorAll('label');
+                    stars.forEach(function(label) {
+                        const input = label.querySelector('input');
+                        const span  = label.querySelector('span');
+
+                        // On hover: highlight this star and all after (flex-row-reverse trick)
+                        label.addEventListener('mouseenter', function() {
+                            let found = false;
+                            stars.forEach(function(l) {
+                                const s = l.querySelector('span');
+                                if (l === label) found = true;
+                                s.style.color = found ? '#fbbf24' : '#d1d5db';
+                            });
+                        });
+
+                        // On mouse leave: revert to selected state
+                        container.addEventListener('mouseleave', function() {
+                            const checked = container.querySelector('input:checked');
+                            stars.forEach(function(l) {
+                                l.querySelector('span').style.color = '#d1d5db';
+                            });
+                            if (checked) {
+                                const val = parseInt(checked.value);
+                                let count = 0;
+                                stars.forEach(function(l) {
+                                    count++;
+                                    if (count <= (6 - val)) {
+                                        l.querySelector('span').style.color = '#fbbf24';
+                                    }
+                                });
+                            }
+                        });
+
+                        // On click: mark selected
+                        input.addEventListener('change', function() {
+                            container.dispatchEvent(new Event('mouseleave'));
+                        });
+                    });
+                });
+
+                // Auto-open tab based on pagination
+                document.addEventListener("DOMContentLoaded", function() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('page_suggestions')) {
+                        showTab('suggestions');
+                    } else if (urlParams.has('page_issues')) {
+                        showTab('issues');
+                    }
+                });
+            </script>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

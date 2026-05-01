@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Birnagar Municipality - Mission Clean City{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Theme Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#002D72',
+                        'primary-dark': '#001a45',
+                        secondary: '#FFD700',
+                        background: '#F0F0F0',
+                        muted: '#C0C0C0',
+                    },
+                    fontFamily: {
+                        sans: ['Lato', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Lato', sans-serif; background-color: #F0F4F8; }
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 75, 135, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 39, 77, 0.1);
+        }
+        /* Active nav link */
+        .nav-link-active {
+            color: #002D72 !important;
+            font-weight: 800 !important;
+            border-bottom: 2.5px solid #002D72;
+            padding-bottom: 2px;
+        }
+        /* Navbar scroll shadow */
+        #main-navbar.scrolled {
+            box-shadow: 0 4px 24px rgba(0,29,77,0.13);
+        }
+        /* Mobile left drawer */
+        #mobile-drawer {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: 80%;
+            max-width: 300px;
+            background: #fff;
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 4px 0 32px rgba(0,29,77,0.18);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        #mobile-drawer.open {
+            transform: translateX(0);
+        }
+        #drawer-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+            backdrop-filter: blur(2px);
+        }
+        #drawer-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body class="bg-background flex flex-col min-h-screen text-gray-800 transition-colors duration-300">
+
+    <!-- Navbar -->
+    <nav id="main-navbar" class="bg-white sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2">
+                        <!-- Logo -->
+                        <img src="{% static 'images/logo.png' %}?v=2" alt="Logo" class="w-12 h-12 bg-white rounded-full p-1 object-contain shadow-sm border border-gray-100">
+                        <div>
+                            <span class="font-bold text-xl text-gray-900 block leading-none">Birnagar Municipality</span>
+                            <span class="text-xs text-primary font-semibold tracking-wide uppercase">Mission Clean City</span>
+                        </div>
+                    </a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-primary focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Desktop Nav -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'home' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'home' %}nav-link-active{% endif %}">Home</a>
+                    <a href="{% url 'about' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'about' %}nav-link-active{% endif %}">About</a>
+                    <a href="{% url 'suggestions' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'suggestions' %}nav-link-active{% endif %}">Suggestions</a>
+                    
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'CITIZEN' %}
+                            <a href="{% url 'submit_problem' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'submit_problem' %}nav-link-active{% endif %}">Submit Issue</a>
+                            <a href="{% url 'citizen_tracking' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'citizen_tracking' %}nav-link-active{% endif %}">My Dashboard</a>
+                        {% elif user.role == 'ADMIN' %}
+                            <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-primary transition font-medium {% if request.resolver_match.url_name == 'admin_dashboard' %}nav-link-active{% endif %}">Admin Dashboard</a>
+                        {% endif %}
+                        <div class="border-l border-gray-300 h-6 mx-2"></div>
+                        
+                        <!-- Notifications Bell (Citizen Only) -->
+                        {% if user.role == 'CITIZEN' %}
+                        <div class="relative group mr-2" id="notificationDropdownContainer">
+                            <button class="text-gray-600 hover:text-primary transition focus:outline-none relative p-1 mt-1" id="bellButton">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                {% if unread_notifications_count and unread_notifications_count > 0 %}
+                                <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full" id="notifBadge">
+                                    {{ unread_notifications_count }}
+                                </span>
+                                {% endif %}
+                            </button>
+                            <div class="absolute right-0 w-80 mt-2 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-xl outline-none invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
+                                <div class="p-3 bg-gray-50 font-bold text-sm text-gray-700 border-b border-gray-200 flex justify-between items-center">
+                                    Notifications
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    {% if recent_notifications %}
+                                        {% for notif in recent_notifications %}
+                                        <div class="p-3 hover:bg-gray-50 border-b border-gray-50 text-sm {{ notif.is_read|yesno:'text-gray-500,text-gray-900 font-semibold bg-blue-50' }}">
+                                            <p>{{ notif.message }}</p>
+                                            <span class="text-[10px] text-gray-400 mt-1 block">{{ notif.created_at|timesince }} ago</span>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="p-4 text-center text-gray-500 text-sm">No notifications yet.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="relative group">
+                            <button class="text-sm font-semibold text-gray-700 hover:text-primary transition flex items-center gap-1 focus:outline-none">
+                                Hi, {{ user.name }}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <div class="absolute right-0 w-48 mt-2 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
+                                <div class="py-1">
+                                    <a href="{% url 'change_password' %}" class="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left hover:bg-gray-50">Change Password</a>
+                                    {% if user.role == 'CITIZEN' %}
+                                    <a href="{% url 'profile_edit' %}" class="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left hover:bg-gray-50">Edit Profile</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{% url 'logout' %}" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-md text-sm transition font-medium ml-2">Logout</a>
+                    {% else %}
+                        <div class="relative group">
+                            <button class="text-gray-600 hover:text-primary transition font-medium focus:outline-none flex items-center gap-1">
+                                Login 
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <div class="absolute right-0 w-48 mt-2 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg outline-none invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
+                                <div class="py-1">
+                                    <a href="{% url 'citizen_login' %}" class="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left hover:bg-gray-50">Citizen Login</a>
+                                    <a href="{% url 'admin_login' %}" class="text-gray-700 flex justify-between w-full px-4 py-2 text-sm leading-5 text-left hover:bg-gray-50">Admin Login</a>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{% url 'citizen_register' %}" class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Report Issue</a>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+    </nav>
+
+    <!-- Mobile Drawer Backdrop -->
+    <div id="drawer-backdrop" class="md:hidden"></div>
+
+    <!-- Mobile Left Drawer -->
+    <div id="mobile-drawer" class="md:hidden">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100" style="background:#002D72;">
+            <div class="flex items-center gap-2">
+                <img src="{% static 'images/logo.png' %}?v=2" alt="Logo" class="w-10 h-10 bg-white rounded-full p-1 object-contain shadow-sm">
+                <span class="font-black text-white text-sm">Birnagar Municipality</span>
+            </div>
+            <button id="drawer-close-btn" class="text-white hover:text-yellow-300 transition focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Drawer Nav Links -->
+        <nav class="flex flex-col px-4 py-4 gap-1 flex-1">
+            <a href="{% url 'home' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition {% if request.resolver_match.url_name == 'home' %}bg-blue-50 text-primary font-black{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Home
+            </a>
+            <a href="{% url 'about' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition {% if request.resolver_match.url_name == 'about' %}bg-blue-50 text-primary font-black{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                About
+            </a>
+            <a href="{% url 'suggestions' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition {% if request.resolver_match.url_name == 'suggestions' %}bg-blue-50 text-primary font-black{% endif %}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                Suggestions
+            </a>
+
+            {% if user.is_authenticated %}
+                {% if user.role == 'CITIZEN' %}
+                <a href="{% url 'submit_problem' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition {% if request.resolver_match.url_name == 'submit_problem' %}bg-blue-50 text-primary font-black{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Submit Issue
+                </a>
+                <a href="{% url 'citizen_tracking' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition {% if request.resolver_match.url_name == 'citizen_tracking' %}bg-blue-50 text-primary font-black{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                    My Dashboard
+                </a>
+                {% elif user.role == 'ADMIN' %}
+                <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Admin Dashboard
+                </a>
+                {% endif %}
+
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold px-3 mb-2">Account</p>
+                    <p class="px-3 py-1 text-sm font-bold text-gray-700">{{ user.name }}</p>
+                    <a href="{% url 'change_password' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Change Password</a>
+                    {% if user.role == 'CITIZEN' %}
+                    <a href="{% url 'profile_edit' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Edit Profile</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="flex items-center gap-3 px-3 py-2.5 mt-2 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition">Logout</a>
+                </div>
+            {% else %}
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                    <a href="{% url 'citizen_login' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition">Citizen Login</a>
+                    <a href="{% url 'admin_login' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-gray-700 hover:bg-blue-50 hover:text-primary transition">Admin Login</a>
+                    <a href="{% url 'citizen_register' %}" class="mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-white text-sm shadow" style="background:#002D72;">Register Now</a>
+                </div>
+            {% endif %}
+        </nav>
+    </div>
+
+
+    <!-- Messages / Alerts -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% if messages %}
+            {% for message in messages %}
+                <div data-auto-dismiss data-dismiss-delay="{% if 'otp-reveal' in message.extra_tags %}60000{% else %}5000{% endif %}" class="p-4 mb-4 rounded-lg flex items-center justify-between shadow-sm border
+                    {% if message.tags == 'error' %} bg-red-50 text-red-800 border-red-200
+                    {% elif message.tags == 'success' %} bg-green-50 text-green-800 border-green-200
+                    {% else %} bg-blue-50 text-blue-800 border-blue-200 {% endif %}">
+                    <div>
+                        <span class="font-medium">{{ message }}</span>
+                        {% if 'otp-reveal' in message.extra_tags %}
+                        <span id="otp-timer" class="ml-2 text-xs font-bold text-blue-500">(visible for <span id="otp-countdown">60</span>s)</span>
+                        {% endif %}
+                    </div>
+                    <button onclick="this.parentElement.style.display='none'" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock content %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-primary-dark text-white mt-auto" style="border-top:5px solid #FFD700;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+
+                <!-- Col 1: Brand -->
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="{% static 'images/logo.png' %}?v=2" alt="Logo" class="w-14 h-14 bg-white rounded-full p-1 object-contain" onerror="this.onerror=null;this.outerHTML='<div style=\'width:48px;height:48px;background:#fff;color:#002D72;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;\'>BM</div>';">
+                        <div>
+                            <p class="font-black text-lg leading-tight">Birnagar Municipality</p>
+                            <p class="text-xs text-yellow-400 font-bold tracking-widest uppercase">Mission Clean City</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed">Empowering citizens to directly participate in civic governance for a cleaner, greener Birnagar.</p>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-widest text-yellow-400 mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><a href="{% url 'home' %}" class="hover:text-white transition flex items-center gap-2"><span class="text-yellow-500">›</span> Home</a></li>
+                        <li><a href="{% url 'about' %}" class="hover:text-white transition flex items-center gap-2"><span class="text-yellow-500">›</span> About</a></li>
+                        <li><a href="{% url 'citizen_tracking' %}" class="hover:text-white transition flex items-center gap-2"><span class="text-yellow-500">›</span> Track Issue</a></li>
+                        <li><a href="{% url 'suggestions' %}" class="hover:text-white transition flex items-center gap-2"><span class="text-yellow-500">›</span> Suggestions</a></li>
+                        {% if not user.is_authenticated %}
+                        <li><a href="{% url 'citizen_register' %}" class="hover:text-white transition flex items-center gap-2"><span class="text-yellow-500">›</span> Register</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Col 3: Contact -->
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-widest text-yellow-400 mb-4">Contact Us</h4>
+                    <ul class="space-y-3 text-sm text-gray-300">
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 mt-0.5 flex-shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>Birnagar Haat, Ward 02, Birnagar, Nadia — 741127</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            <span>03473-260227</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <a href="mailto:birnagarmunicipality@rediffmail.com" class="hover:text-white transition break-all">birnagarmunicipality@rediffmail.com</a>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Mon – Sat &nbsp;|&nbsp; 10:00 AM – 5:00 PM</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div style="border-top:1px solid rgba(255,255,255,0.08);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+                <span>&copy; 2026 Birnagar Municipality. All rights reserved.</span>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-gray-300 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-gray-300 transition">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-dismiss alert messages
+        document.querySelectorAll('[data-auto-dismiss]').forEach(function(el) {
+            const delay = parseInt(el.getAttribute('data-dismiss-delay') || '5000');
+            setTimeout(function() {
+                el.style.transition = 'opacity 0.5s ease';
+                el.style.opacity = '0';
+                setTimeout(function() { el.style.display = 'none'; }, 500);
+            }, delay);
+        });
+
+        // OTP countdown timer
+        const otpCountdown = document.getElementById('otp-countdown');
+        if (otpCountdown) {
+            let secs = 60;
+            const interval = setInterval(function() {
+                secs--;
+                otpCountdown.textContent = secs;
+                if (secs <= 0) clearInterval(interval);
+            }, 1000);
+        }
+
+        // Mobile Left Drawer
+        const drawerBtn  = document.getElementById('mobile-menu-btn');
+        const drawer     = document.getElementById('mobile-drawer');
+        const backdrop   = document.getElementById('drawer-backdrop');
+        const closeBtn   = document.getElementById('drawer-close-btn');
+
+        function openDrawer() {
+            drawer.classList.add('open');
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeDrawer() {
+            drawer.classList.remove('open');
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        if (drawerBtn) drawerBtn.addEventListener('click', openDrawer);
+        if (closeBtn)  closeBtn.addEventListener('click', closeDrawer);
+        if (backdrop)  backdrop.addEventListener('click', closeDrawer);
+
+        // Navbar scroll shadow
+        const navbar = document.getElementById('main-navbar');
+        if (navbar) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            }, { passive: true });
+        }
+
+    </script>
+    {% if user.is_authenticated %}
+    <!-- ============================================================
+         INACTIVITY AUTO-LOGOUT SYSTEM
+         55 min → warning popup   |   60 min → auto logout
+    ============================================================ -->
+    <div id="idle-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:20px; box-shadow:0 25px 60px rgba(0,29,77,0.25); max-width:420px; width:90%; padding:2.5rem; text-align:center; position:relative; border-top:6px solid #002D72;">
+            <div style="width:64px;height:64px;background:#FFF7E6;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+                <svg style="width:32px;height:32px;color:#D97706;" fill="none" stroke="#D97706" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 style="font-size:1.25rem;font-weight:800;color:#002D72;margin-bottom:0.5rem;">Session Expiring Soon</h3>
+            <p style="font-size:0.9rem;color:#6B7280;margin-bottom:0.25rem;">You have been inactive for a while.</p>
+            <p style="font-size:0.9rem;color:#6B7280;margin-bottom:1.5rem;">
+                You will be automatically logged out in
+                <strong id="idle-countdown" style="color:#D97706;font-size:1.05rem;"></strong>.
+            </p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <button id="idle-stay-btn"
+                    style="background:#002D72;color:#fff;border:none;padding:0.75rem 1.75rem;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s;"
+                    onmouseover="this.style.background='#001a45'" onmouseout="this.style.background='#002D72'">
+                    ✓ Stay Logged In
+                </button>
+                <a href="{% url 'logout' %}"
+                    style="background:#FEE2E2;color:#B91C1C;border:none;padding:0.75rem 1.75rem;border-radius:10px;font-weight:700;font-size:0.9rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;">
+                    Logout Now
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const WARN_AT   = 50 * 60 * 1000;  // 50 minutes — gives a 10-min warning window
+        const LOGOUT_AT = 60 * 60 * 1000;  // 60 minutes
+        const LOGOUT_URL = "{% url 'logout' %}";
+
+        let idleTimer   = null;
+        let countdownInterval = null;
+        const overlay   = document.getElementById('idle-overlay');
+        const countdown = document.getElementById('idle-countdown');
+        const stayBtn   = document.getElementById('idle-stay-btn');
+
+        function formatTime(ms) {
+            const totalSec = Math.ceil(ms / 1000);
+            const min = Math.floor(totalSec / 60);
+            const sec = totalSec % 60;
+            return min > 0 ? min + 'm ' + sec + 's' : sec + 's';
+        }
+
+        function showWarning(remainingMs) {
+            overlay.style.display = 'flex';
+            clearInterval(countdownInterval);
+            let remaining = remainingMs;
+            countdown.textContent = formatTime(remaining);
+            countdownInterval = setInterval(function () {
+                remaining -= 1000;
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = LOGOUT_URL;
+                } else {
+                    countdown.textContent = formatTime(remaining);
+                }
+            }, 1000);
+        }
+
+        function hideWarning() {
+            overlay.style.display = 'none';
+            clearInterval(countdownInterval);
+        }
+
+        function resetTimer() {
+            clearTimeout(idleTimer);
+            hideWarning();
+
+            // Show warning after 55 minutes of inactivity
+            idleTimer = setTimeout(function () {
+                showWarning(LOGOUT_AT - WARN_AT);
+
+                // Hard logout fallback after the remaining 5 minutes
+                setTimeout(function () {
+                    window.location.href = LOGOUT_URL;
+                }, LOGOUT_AT - WARN_AT);
+
+            }, WARN_AT);
+        }
+
+        // "Stay Logged In" resets the timer
+        stayBtn.addEventListener('click', resetTimer);
+
+        // Track all user activity
+        ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(function (evt) {
+            document.addEventListener(evt, resetTimer, { passive: true });
+        });
+
+        // Start the timer immediately
+        resetTimer();
+    })();
+    </script>
+    {% endif %}
+
+    <script>
+    // Global function for image previews
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = "";
+            preview.style.display = 'none';
+        }
+    }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bellButton = document.getElementById('notificationDropdownContainer');
+            const notifBadge = document.getElementById('notifBadge');
+            if(bellButton && notifBadge) {
+                bellButton.addEventListener('mouseenter', function() {
+                    if(notifBadge.style.display !== 'none') {
+                        fetch('{% url "mark_notifications_read" %}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(res => {
+                            if(res.ok) {
+                                notifBadge.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

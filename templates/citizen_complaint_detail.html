@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-background min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Breadcrumb / Back Navigation -->
+        <div class="mb-6">
+            <a href="{% url 'citizen_tracking' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary transition">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to My Dashboard
+            </a>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white shadow-md rounded-2xl overflow-hidden border border-gray-100">
+            <!-- Header Section -->
+            <div class="px-6 py-5 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">{{ complaint.problem_id }}</h1>
+                    <p class="text-sm font-medium text-primary mt-1">{{ complaint.get_category_display }} {% if complaint.sub_category %}— {{ complaint.sub_category }}{% endif %}</p>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    {% if complaint.priority and complaint.priority != 'LOW' %}
+                    <span class="px-3 py-1 rounded-md text-xs font-bold shadow-sm
+                        {% if complaint.priority == 'URGENT' %}bg-red-100 text-red-700
+                        {% elif complaint.priority == 'HIGH' %}bg-orange-100 text-orange-700
+                        {% elif complaint.priority == 'MEDIUM' %}bg-blue-100 text-blue-700
+                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                        ⚡ {{ complaint.get_priority_display }} Priority
+                    </span>
+                    {% endif %}
+                    
+                    <span class="px-3 py-1 rounded-md text-sm font-bold shadow-sm
+                        {% if complaint.status == 'RESOLVED' %}bg-green-100 text-green-800
+                        {% elif complaint.status == 'PENDING' %}bg-yellow-100 text-yellow-800
+                        {% elif complaint.status == 'IN_PROGRESS' %}bg-blue-100 text-blue-800
+                        {% elif complaint.status == 'TERMINATED' %}bg-red-100 text-red-800
+                        {% endif %}">
+                        {{ complaint.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Left Column: Details & Media -->
+                <div class="md:col-span-2 space-y-8">
+                    
+                    <!-- Description -->
+                    <section>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Description</h3>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 text-gray-700 leading-relaxed text-sm">
+                            {{ complaint.description|default:"No description provided."|linebreaks }}
+                        </div>
+                    </section>
+
+                    <!-- Location -->
+                    <section>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Location Information</h3>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                            <p class="text-sm font-semibold text-gray-900 mb-1">Ward {{ complaint.ward_number }}</p>
+                            <p class="text-sm text-gray-600">{{ complaint.target_address|default:"Location not detailed" }}</p>
+                            
+                            {% if complaint.latitude and complaint.longitude %}
+                            <a href="https://www.google.com/maps?q={{ complaint.latitude }},{{ complaint.longitude }}" target="_blank" class="mt-3 inline-flex items-center text-sm font-medium text-secondary hover:underline transition">
+                                <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                                View Exact Location on Map
+                            </a>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <!-- Attached Evidence -->
+                    <section>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Attached Evidence</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {% if complaint.photo1 %}
+                            <a href="{{ complaint.photo1.url }}" target="_blank" class="block aspect-square overflow-hidden rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
+                                <img src="{{ complaint.photo1.url }}" class="w-full h-full object-cover hover:scale-105 transition duration-300" alt="Evidence 1">
+                            </a>
+                            {% endif %}
+                            {% if complaint.photo2 %}
+                            <a href="{{ complaint.photo2.url }}" target="_blank" class="block aspect-square overflow-hidden rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
+                                <img src="{{ complaint.photo2.url }}" class="w-full h-full object-cover hover:scale-105 transition duration-300" alt="Evidence 2">
+                            </a>
+                            {% endif %}
+                            {% if complaint.photo3 %}
+                            <a href="{{ complaint.photo3.url }}" target="_blank" class="block aspect-square overflow-hidden rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
+                                <img src="{{ complaint.photo3.url }}" class="w-full h-full object-cover hover:scale-105 transition duration-300" alt="Evidence 3">
+                            </a>
+                            {% endif %}
+                            {% if complaint.video %}
+                            <a href="{{ complaint.video.url }}" target="_blank" class="block aspect-square bg-gray-100 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col items-center justify-center group relative overflow-hidden">
+                                <div class="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-20 transition"></div>
+                                <svg class="w-8 h-8 text-primary mb-1 z-10" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                                <span class="text-[10px] font-bold text-gray-600 uppercase z-10">Play Video</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- Right Column: Timeline & Resolution -->
+                <div class="space-y-6">
+                    
+                    <!-- Timeline Card -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden relative">
+                        <div class="h-1 w-full bg-gradient-to-r from-primary to-secondary"></div>
+                        <div class="p-5">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Timeline</h3>
+                            
+                            <div class="relative pl-4 space-y-6">
+                                <!-- Line down the middle -->
+                                <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-gray-200"></div>
+                                
+                                <!-- Submitted Event -->
+                                <div class="relative">
+                                    <div class="absolute -left-5 top-1.5 w-3 h-3 bg-blue-500 rounded-full ring-4 ring-white shadow"></div>
+                                    <p class="text-xs font-bold text-gray-900">Submitted</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ complaint.submitted_at|date:"M d, Y · h:i A" }}</p>
+                                </div>
+                                
+                                <!-- Reopened Event (if any) -->
+                                {% if complaint.reopened_at %}
+                                <div class="relative">
+                                    <div class="absolute -left-5 top-1.5 w-3 h-3 bg-orange-500 rounded-full ring-4 ring-white shadow"></div>
+                                    <p class="text-xs font-bold text-gray-900">Re-opened by Citizen</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ complaint.reopened_at|date:"M d, Y · h:i A" }}</p>
+                                </div>
+                                {% endif %}
+
+                                <!-- Resolved/Terminated Event -->
+                                {% if complaint.resolved_at %}
+                                <div class="relative">
+                                    <div class="absolute -left-5 top-1.5 w-3 h-3 {% if complaint.status == 'RESOLVED' %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full ring-4 ring-white shadow"></div>
+                                    <p class="text-xs font-bold text-gray-900">{{ complaint.get_status_display }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">{{ complaint.resolved_at|date:"M d, Y · h:i A" }}</p>
+                                    {% if complaint.resolved_by %}
+                                    <p class="text-[11px] text-gray-500 italic mt-0.5">by {{ complaint.resolved_by.name }} ({{ complaint.resolved_by.employee_id }})</p>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resolution / Termination Notes -->
+                    {% if complaint.resolution_notes or complaint.resolution_photo %}
+                    <div class="{% if complaint.status == 'TERMINATED' %}bg-red-50 border-red-200{% else %}bg-green-50 border-green-200{% endif %} rounded-xl border p-5 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            {% if complaint.status == 'TERMINATED' %}
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                                <h3 class="text-sm font-bold text-red-900">Admin Termination Reason</h3>
+                            {% else %}
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                <h3 class="text-sm font-bold text-green-900">Admin Resolution Note</h3>
+                            {% endif %}
+                        </div>
+                        
+                        {% if complaint.resolution_notes %}
+                        <div class="text-sm {% if complaint.status == 'TERMINATED' %}text-red-800 border-red-300{% else %}text-green-800 border-green-300{% endif %} leading-relaxed italic border-l-2 pl-3 py-1 mb-3">
+                            {% if complaint.resolution_notes|wordcount > 5 %}
+                                <div id="short-note" class="leading-relaxed whitespace-pre-wrap">{{ complaint.resolution_notes|truncatewords:5 }}</div>
+                                <div id="full-note" class="hidden leading-relaxed whitespace-pre-wrap">{{ complaint.resolution_notes }}</div>
+                                <button type="button" onclick="document.getElementById('short-note').classList.toggle('hidden'); document.getElementById('full-note').classList.toggle('hidden'); this.innerText = this.innerText === 'See More' ? 'See Less' : 'See More';" class="{% if complaint.status == 'TERMINATED' %}text-red-900 hover:text-red-700{% else %}text-green-900 hover:text-green-700{% endif %} font-semibold text-xs focus:outline-none mt-2 uppercase tracking-wider">See More</button>
+                            {% else %}
+                                <div class="leading-relaxed whitespace-pre-wrap">{{ complaint.resolution_notes }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if complaint.resolution_photo %}
+                        <div class="mt-4 border-t {% if complaint.status == 'TERMINATED' %}border-red-200{% else %}border-green-200{% endif %} pt-3">
+                            <p class="text-xs font-bold {% if complaint.status == 'TERMINATED' %}text-red-800{% else %}text-green-800{% endif %} mb-2">Resolution Proof</p>
+                            <a href="{{ complaint.resolution_photo.url }}" target="_blank" class="block w-48 h-32 rounded border {% if complaint.status == 'TERMINATED' %}border-red-200{% else %}border-green-200{% endif %} overflow-hidden hover:opacity-80 transition shadow-sm">
+                                <img src="{{ complaint.resolution_photo.url }}" alt="Resolution Proof" class="w-full h-full object-cover">
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Rating & Feedback Section -->
+                    {% if complaint.status == 'RESOLVED' %}
+                    <div class="bg-blue-50 rounded-xl border border-blue-100 p-5 shadow-sm mt-4">
+                        {% if complaint.rating %}
+                            <h3 class="text-sm font-bold text-gray-900 mb-2">Your Rating</h3>
+                            <div class="flex text-yellow-400 text-lg">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= complaint.rating %}★{% else %}<span class="text-gray-300">★</span>{% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Thank you for your feedback.</p>
+                        {% else %}
+                            <h3 class="text-sm font-bold text-gray-900 mb-2">Rate Resolution</h3>
+                            <form action="{% url 'rate_complaint' complaint.id %}" method="POST" class="flex items-center gap-2">
+                                {% csrf_token %}
+                                <select name="rating" class="text-sm border-gray-300 rounded-md focus:ring-primary focus:border-primary shadow-sm bg-white" required>
+                                    <option value="">Rate...</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                    <option value="4">⭐⭐⭐⭐ Good</option>
+                                    <option value="3">⭐⭐⭐ Average</option>
+                                    <option value="2">⭐⭐ Poor</option>
+                                    <option value="1">⭐ Unresolved</option>
+                                </select>
+                                <button type="submit" class="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-md hover:bg-primary-dark transition shadow">Submit</button>
+                            </form>
+                        {% endif %}
+
+                        <!-- Reopen logic based on rating -->
+                        {% if complaint.reopened_at %}
+                            <div class="mt-4 pt-4 border-t border-blue-200">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                        Re-open Locked
+                                    </span>
+                                    <span class="text-xs text-gray-400">This complaint has already been re-opened once and cannot be re-opened again.</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            {% if complaint.rating %}
+                                {% if complaint.rating <= 3 %}
+                                    <div class="mt-4 pt-4 border-t border-blue-200">
+                                        <p class="text-xs text-gray-600 mb-2">Not satisfied? You can re-open this complaint within 7 days of resolution.</p>
+                                        <form action="{% url 'reopen_complaint' complaint.id %}" method="POST" onsubmit="return confirm('Are you sure you want to re-open this complaint?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-xs bg-orange-500 hover:bg-orange-600 text-white font-bold px-3 py-1.5 rounded-md transition">
+                                                Re-open Complaint
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <div class="mt-4 pt-4 border-t border-blue-200">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                Re-open Locked
+                                            </span>
+                                            <span class="text-xs text-gray-400">You rated {{ complaint.rating }}/5 ⭐ — satisfied resolutions cannot be re-opened.</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="mt-4 pt-4 border-t border-blue-200">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg font-semibold cursor-not-allowed border border-gray-200">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                            Re-open Locked
+                                        </span>
+                                        <span class="text-xs text-gray-400">Please submit your rating above before you can re-open this complaint.</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Appeals Section (Terminated) -->
+                    {% if complaint.status == 'TERMINATED' %}
+                    <div class="bg-red-50 rounded-xl border border-red-200 p-5 shadow-sm mt-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"></path></svg>
+                            <h3 class="text-sm font-bold text-red-900">Complaint Terminated</h3>
+                        </div>
+                        <p class="text-sm text-red-800 leading-relaxed mb-4">
+                            This complaint has been closed by the administration.
+                        </p>
+
+                        {% if complaint.appealed_at %}
+                        <div class="border-t border-red-200 pt-4">
+                            <h4 class="text-sm font-bold text-red-900 mb-1">Your Appeal</h4>
+                            <p class="text-sm text-red-800 italic bg-white p-3 rounded border border-red-100">
+                                "{{ complaint.appeal_text }}"
+                            </p>
+                            <p class="text-xs text-red-600 mt-2">Submitted on {{ complaint.appealed_at|date:"M d, Y" }}</p>
+                        </div>
+                        {% else %}
+                        <div class="border-t border-red-200 pt-4">
+                            <p class="text-sm text-gray-700 mb-3">If you believe this issue was closed incorrectly, you can submit a one-time appeal to the administration.</p>
+                            <form action="{% url 'appeal_complaint' complaint.id %}" method="POST">
+                                {% csrf_token %}
+                                <textarea name="appeal_text" rows="3" required placeholder="Reason for appeal..." class="w-full text-sm border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 shadow-sm mb-3 px-3 py-2"></textarea>
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-md transition shadow text-sm" onclick="return confirm('Submit appeal? This can only be done once.')">
+                                    Submit Appeal
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

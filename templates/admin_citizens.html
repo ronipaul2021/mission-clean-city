@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-background min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-primary-dark">Admin Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-500">Welcome, <span class="font-bold text-gray-800">{{ admin_name }}</span> (ID: {{ admin_employee_id }})</p>
+                </div>
+                <!-- Navigation -->
+                <div class="flex flex-wrap gap-2">
+                    <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizen Issues</a>
+                    <a href="{% url 'admin_suggestions' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Citizen Suggestions</a>
+                    <a href="{% url 'admin_citizens_directory' %}" class="px-4 py-2 bg-primary text-white rounded-lg font-medium text-sm shadow-sm transition">Citizens Directory</a>
+                    <a href="{% url 'admin_analytics' %}" class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium text-sm transition">Analytics</a>
+                </div>
+            </div>
+            
+            <!-- Filters Bar -->
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <form action="{% url 'admin_citizens_directory' %}" method="GET" class="flex flex-col md:flex-row flex-wrap items-center gap-3">
+                    <!-- Search Input -->
+                    <div class="relative w-full md:flex-grow md:max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" name="q" placeholder="Search ID, Name, Mobile..." value="{{ search_query }}" class="block w-full pl-9 pr-3 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition">
+                    </div>
+                    
+                    <!-- Dropdowns -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <select id="ward" name="ward" class="block w-full sm:w-auto pl-3 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent rounded-lg shadow-sm bg-gray-50 focus:bg-white transition cursor-pointer" onchange="this.form.submit()">
+                            <option value="">All Wards</option>
+                            {% for ward in active_wards %}
+                                <option value="{{ ward }}" {% if selected_ward == ward|stringformat:"s" %}selected{% endif %}>Ward {{ ward }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-2xl overflow-hidden border border-gray-100">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Citizen</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Registered</th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        {% for citizen in citizens %}
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        {% if citizen.profile_photo %}
+                                            <img class="h-10 w-10 rounded-full object-cover border border-gray-200" src="{{ citizen.profile_photo.url }}" alt="">
+                                        {% else %}
+                                            <div class="h-10 w-10 rounded-full bg-primary-dark text-white flex items-center justify-center font-bold text-sm">
+                                                {{ citizen.name|make_list|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-bold text-gray-900">{{ citizen.name }}</div>
+                                        <div class="text-xs text-gray-500">ID: {% if citizen.citizen_id %}{{ citizen.citizen_id }}{% else %}BM-PENDING{% endif %}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">+91-{{ citizen.mobile_number }}</div>
+                                <div class="text-xs text-gray-500">Ward: {{ citizen.ward_number }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ citizen.date_joined|date:"M d, Y" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{% url 'admin_citizen_detail' citizen.id %}" class="text-primary hover:text-primary-dark bg-blue-50 px-3 py-1.5 rounded-md transition border border-blue-100">View Profile</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500 bg-gray-50">
+                                <p class="text-sm">No citizens found matching your criteria.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if citizens.has_other_pages %}
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if citizens.has_previous %}
+                    <a href="?page={{ citizens.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_ward %}&ward={{ selected_ward }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    {% if citizens.has_next %}
+                    <a href="?page={{ citizens.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_ward %}&ward={{ selected_ward }}{% endif %}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ citizens.start_index }}</span> to <span class="font-medium">{{ citizens.end_index }}</span> of <span class="font-medium">{{ paginator.count }}</span> citizens
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% for i in paginator.page_range %}
+                                {% if citizens.number == i %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-primary bg-primary text-sm font-medium text-white">{{ i }}</span>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="paginate({{ i }})" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ i }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <script>
+            function paginate(pageNum) {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('page', pageNum);
+                window.location.search = urlParams.toString();
+            }
+            </script>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

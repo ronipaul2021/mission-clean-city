@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="text-center">
+            <h2 class="mt-4 text-center text-3xl font-extrabold text-primary-dark">
+                Verify Your Mobile
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                A 6-digit OTP has been sent to your registered mobile number.
+                <br>Please enter it below to complete registration.
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
+
+
+
+            <!-- OTP Entry Form -->
+            <form class="space-y-6" action="{% url 'verify_otp' %}" method="POST">
+                {% csrf_token %}
+                <div>
+                    <label for="otp" class="block text-sm font-medium text-gray-700">Enter 6-Digit OTP</label>
+                    <div class="mt-1">
+                        <input
+                            id="otp"
+                            name="otp"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="6"
+                            pattern="\d{6}"
+                            required
+                            placeholder="— — — — — —"
+                            class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-300 focus:outline-none focus:ring-primary focus:border-primary text-xl text-center tracking-[0.5em] font-bold"
+                        >
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500 text-center">OTP is valid for this session only.</p>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-0.5">
+                        ✅ Verify &amp; Complete Registration
+                    </button>
+                </div>
+            </form>
+
+            <!-- Resend OTP Form -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500">Didn't receive the OTP?</p>
+                <form action="{% url 'verify_otp' %}" method="POST" class="mt-2 inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="resend">
+                    <button type="submit" class="text-sm font-semibold text-primary hover:text-primary-dark">
+                        Resend OTP
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

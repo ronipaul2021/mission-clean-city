@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<div class="min-h-[80vh] bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <div class="bg-primary-dark px-6 py-8 sm:p-10 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-primary rounded-full blur-xl opacity-50"></div>
+            <h2 class="text-3xl font-extrabold text-white relative z-10">Suggestions Box</h2>
+            <p class="mt-2 text-blue-100 relative z-10">Have an idea on what we can improve for our city? We're all ears.</p>
+        </div>
+        <div class="px-6 py-8 sm:p-10">
+            <!-- Limit Tracker -->
+            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-blue-900">Submission Limits</h3>
+                    <p class="text-xs text-blue-700 mt-1">You can submit max 1 suggestion daily and 5 per month.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-bold {% if daily_left == 0 %}text-red-600{% else %}text-green-600{% endif %}">Daily Left: {{ daily_left }}/1</p>
+                    <p class="text-sm font-bold {% if monthly_left == 0 %}text-red-600{% else %}text-green-600{% endif %}">Monthly Left: {{ monthly_left }}/5</p>
+                </div>
+            </div>
+
+            {% if monthly_left == 0 %}
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
+                You have reached your <strong>monthly limit</strong> (5 suggestions). Please try again next month.
+            </div>
+            {% elif daily_left == 0 %}
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
+                You have reached your <strong>daily limit</strong> (1 suggestion). Please try again tomorrow.
+            </div>
+            {% endif %}
+
+            <form action="{% url 'suggestions' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Static Info Section -->
+                    <div class="sm:col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Your Information</h3>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" readonly value="{% if user.is_authenticated %}{{ user.name }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Mobile Number</label>
+                        <input type="tel" readonly value="{% if user.is_authenticated %}{{ user.mobile_number }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Aadhaar Number</label>
+                        <input type="text" readonly value="{% if user.is_authenticated %}{{ user.encrypted_aadhaar }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Your Ward Number</label>
+                        <input type="text" readonly value="{% if user.is_authenticated %}Ward {{ user.ward_number }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Your Address</label>
+                        <textarea readonly rows="2" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">{% if user.is_authenticated %}{{ user.address }}{% endif %}</textarea>
+                    </div>
+
+                    <!-- Improvement Area Section -->
+                    <div class="sm:col-span-2 mt-4">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Improvement Area</h3>
+                    </div>
+                    <div>
+                        <label for="target_ward_number" class="block text-sm font-medium text-gray-700">Target Ward Number *</label>
+                        <select id="target_ward_number" name="target_ward_number" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md border">
+                            <option value="">Select Target Ward</option>
+                            {% for i in '123456789'|make_list %}
+                                <option value="{{ i }}">Ward {{ i }}</option>
+                            {% endfor %}
+                            <option value="10">Ward 10</option>
+                            <option value="11">Ward 11</option>
+                            <option value="12">Ward 12</option>
+                            <option value="13">Ward 13</option>
+                            <option value="14">Ward 14</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="target_address" class="block text-sm font-medium text-gray-700">Target Address *</label>
+                        <textarea id="target_address" name="target_address" rows="2" required placeholder="Full address of the area that needs improvement" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                    </div>
+
+                    <!-- Map Location -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pin Exact Location (Optional but recommended)</label>
+                        <div class="text-xs text-gray-500 mb-2">Click on the map to place a pin at the exact location that needs improvement.</div>
+                        <div id="map" class="h-64 w-full rounded-md shadow-sm border border-gray-300 z-10"></div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <span id="map_status" class="text-xs text-gray-500 italic">No location selected.</span>
+                            <button type="button" onclick="clearPin()" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded">Clear Pin</button>
+                        </div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                    </div>
+
+                    <!-- Suggestion Details Section -->
+                    <div class="sm:col-span-2 mt-4">
+                        <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Suggestion Details</h3>
+                    </div>
+                    <div>
+                        <label for="suggestion_category" class="block text-sm font-medium text-gray-700">Suggestion Category *</label>
+                        <select id="suggestion_category" name="suggestion_category" required onchange="toggleDescriptionField()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md border">
+                            <option value="">Select a Category</option>
+                            {% for code, name in CategoryChoices.choices %}
+                                <option value="{{ code }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2" id="description_container">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Your Idea / Suggestion <span id="desc_asterisk" class="hidden text-red-500">*</span></label>
+                        <textarea id="description" name="description" rows="5" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Tell us how we can make Birnagar better..."></textarea>
+                    </div>
+                    
+                    <div class="sm:col-span-2">
+                        <label for="photo" class="block text-sm font-medium text-gray-700">Photo of this place *</label>
+                        <input id="photo" name="photo" type="file" accept="image/*" required 
+                               onchange="previewImage(this, 'suggestion-preview')"
+                               class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                        <div class="mt-3 flex justify-center">
+                            <img id="suggestion-preview" src="#" alt="Preview" class="hidden h-32 w-32 object-cover rounded-lg border-2 border-primary shadow-sm">
+                        </div>
+                        <p class="mt-1 text-[10px] text-gray-400 text-center">JPEG/JPG images only. Auto-compressed to under 75KB.</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    {% if can_submit %}
+                        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-0.5">
+                            Submit Suggestion
+                        </button>
+                    {% else %}
+                        <button type="button" disabled class="cursor-not-allowed opacity-50 w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-gray-500">
+                            Limit Reached
+                        </button>
+                    {% endif %}
+                </div>
+                
+                <script>
+                    function toggleDescriptionField() {
+                        const categorySelect = document.getElementById('suggestion_category');
+                        const descAsterisk = document.getElementById('desc_asterisk');
+                        const descriptionInput = document.getElementById('description');
+                        
+                        if (categorySelect.value === 'OTHER') {
+                            descAsterisk.classList.remove('hidden');
+                            descriptionInput.required = true;
+                        } else {
+                            descAsterisk.classList.add('hidden');
+                            descriptionInput.required = false;
+                        }
+                    }
+
+                    // Leaflet Map Initialization with Google Maps Tiles
+                    let map = L.map('map').setView([23.2427, 88.5524], 13); // Birnagar approximate coordinates
+                    let marker = null;
+                    
+                    const latInput = document.getElementById('latitude');
+                    const lngInput = document.getElementById('longitude');
+                    const mapStatus = document.getElementById('map_status');
+                    const addressInput = document.getElementById('target_address');
+
+                    // Use Google Maps Tiles
+                    L.tileLayer('http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
+                        maxZoom: 19,
+                        attribution: '© Google Maps'
+                    }).addTo(map);
+
+                    map.on('click', function(e) {
+                        const lat = e.latlng.lat;
+                        const lng = e.latlng.lng;
+
+                        if (marker) {
+                            marker.setLatLng(e.latlng);
+                        } else {
+                            marker = L.marker(e.latlng).addTo(map);
+                        }
+
+                        latInput.value = lat;
+                        lngInput.value = lng;
+                        mapStatus.textContent = "Fetching exact address...";
+                        mapStatus.classList.remove('text-gray-500', 'text-green-600');
+                        mapStatus.classList.add('text-yellow-600', 'font-semibold');
+
+                        // Reverse Geocode using OpenStreetMap Nominatim
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.display_name) {
+                                    addressInput.value = data.display_name;
+                                    mapStatus.textContent = "Location selected and address auto-filled.";
+                                    mapStatus.classList.remove('text-yellow-600');
+                                    mapStatus.classList.add('text-green-600');
+                                } else {
+                                    mapStatus.textContent = "Location selected, but no exact address found.";
+                                    mapStatus.classList.remove('text-yellow-600');
+                                    mapStatus.classList.add('text-green-600');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error fetching address:', error);
+                                mapStatus.textContent = "Location selected, but failed to fetch address.";
+                                mapStatus.classList.remove('text-yellow-600');
+                                mapStatus.classList.add('text-red-600');
+                            });
+                    });
+
+                    function clearPin() {
+                        if (marker) {
+                            map.removeLayer(marker);
+                            marker = null;
+                        }
+                        latInput.value = '';
+                        lngInput.value = '';
+                        addressInput.value = '';
+                        mapStatus.textContent = "No location selected.";
+                        mapStatus.classList.remove('text-green-600', 'text-yellow-600', 'text-red-600', 'font-semibold');
+                        mapStatus.classList.add('text-gray-500');
+                    }
+                </script>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500">Submissions are reviewed weekly by the municipal board.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
