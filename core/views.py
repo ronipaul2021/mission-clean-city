@@ -34,6 +34,7 @@ from urllib.parse import urlencode
 
 from .models import User, Complaint, Suggestion, Notification
 from .sms import send_otp_sms
+from .email_service import send_otp_email
 from django.contrib.auth.hashers import make_password
 from .utils import (
     encrypt_aadhaar,
@@ -242,8 +243,8 @@ def citizen_register(request):
         profile_photo = request.FILES.get('profile_photo')
 
         # --- Validation ---
-        if not all([name, mobile, aadhaar, address, ward_number, password, profile_photo]):
-            messages.error(request, "All fields including Profile Photo are mandatory.")
+        if not all([name, email, mobile, aadhaar, address, ward_number, password, profile_photo]):
+            messages.error(request, "All fields including Email and Profile Photo are mandatory.")
             return redirect('citizen_register')
 
         if len(mobile) != 10 or not mobile.isdigit():
@@ -299,11 +300,11 @@ def citizen_register(request):
         otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, otp)
 
-        sms_sent = send_otp_sms(mobile, otp)
-        if sms_sent:
-            messages.success(request, f"A 6-digit OTP has been sent to +91-{mobile}.")
+        email_sent = send_otp_email(email, otp)
+        if email_sent:
+            messages.success(request, f"A 6-digit OTP has been sent to your email: {email}.")
         else:
-            messages.error(request, "SMS service is temporarily unavailable. Please try again in a few minutes.")
+            messages.error(request, "Email service is temporarily unavailable. Please try again in a few minutes.")
             if settings.DEBUG:
                 # Dev-only: also reveal OTP so testing is not blocked
                 messages.warning(request, f"[Dev Mode] Your OTP is: {otp}", extra_tags='otp-reveal')
@@ -324,16 +325,16 @@ def verify_otp(request):
 
     # Handle Resend OTP
     if request.method == 'POST' and request.POST.get('action') == 'resend':
-        mobile  = request.session[OTP_DATA_KEY]['mobile_number']
+        email = request.session[OTP_DATA_KEY]['email']
         new_otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, new_otp)
         # Reset attempt counter on resend
         request.session.pop('otp_attempts', None)
-        sms_sent = send_otp_sms(mobile, new_otp)
-        if sms_sent:
-            messages.success(request, f"A new OTP has been sent to +91-{mobile}.")
+        email_sent = send_otp_email(email, new_otp)
+        if email_sent:
+            messages.success(request, f"A new OTP has been sent to your email: {email}.")
         else:
-            messages.error(request, "SMS service is temporarily unavailable. Please try again.")
+            messages.error(request, "Email service is temporarily unavailable. Please try again.")
             if settings.DEBUG:
                 messages.warning(request, f"[Dev Mode] Your OTP is: {new_otp}", extra_tags='otp-reveal')
         return redirect('verify_otp')

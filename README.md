@@ -14,7 +14,7 @@
 
 ---
 
-## ✨ System Capabilities Overview
+## ✨ All Features
 
 | 🏢 **For Administrators** | 🧑‍🤝‍🧑 **For Citizens** |
 | :--- | :--- |
@@ -35,7 +35,7 @@ Handling municipal data requires absolute security. The platform implements rigo
 | **Blind Duplicate Detection** | A one-way cryptographic hash of the Aadhaar is stored to enforce "One-Account-Per-Citizen". | Spam accounts / System abuse. |
 | **Protected Media Routing** | A custom Django middleware gatekeeper intercepts media requests, ensuring only authenticated owners/admins see profile/complaint photos. | Unauthorized public scraping of private images. |
 | **Brute-Force Protection** | Strict rate-limiting on file uploads and registration endpoints (e.g., max 3 uploads/hour). | Server Denial of Service (DoS) and Storage Exhaustion. |
-| **OTP Verification** | Live SMS-based verification via **Fast2SMS API** with secure, encrypted server-side sessions. | Fake phone numbers & impersonation. |
+| **OTP Verification** | Secure Email-based verification with encrypted server-side sessions. | Fake identities & impersonation. |
 
 ---
 
@@ -53,7 +53,17 @@ Artificial Intelligence is deeply integrated to automate administrative overhead
 
 ## 💻 Technical Architecture & Stack
 
-### Backend Engine (Django)
+### 🛠️ Tech Stack
+
+| Category | Technology |
+| :--- | :--- |
+| **Frontend** | HTML5, Tailwind CSS, JavaScript (Vanilla) |
+| **Backend** | Python 3.x, Django 5.2.6 |
+| **Database** | SQLite (Dev) / PostgreSQL (Prod) |
+| **API Used** | SMTP (Email Delivery), Fast2SMS (Legacy Support) |
+| **Auth Used** | Custom Django Auth, Email OTP Verification, Fernet Aadhaar Encryption |
+
+### 🏛️ System Architecture
 | Component | Description |
 | :--- | :--- |
 | **Service Layer Pattern** | Heavy business logic is decoupled from `views.py` into `services/` (e.g., `ComplaintService`), resulting in thin controllers and robust, testable logic. |
