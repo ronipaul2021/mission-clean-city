@@ -33,7 +33,6 @@ from django.db.models import Q, Count
 from urllib.parse import urlencode
 
 from .models import User, Complaint, Suggestion, Notification
-from .sms import send_otp_sms
 from .email_service import send_otp_email, send_registration_confirmation_email, send_admin_registration_confirmation_email
 from django.contrib.auth.hashers import make_password
 from .utils import (

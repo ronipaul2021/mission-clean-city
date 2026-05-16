@@ -13,7 +13,7 @@ Mission Clean City is a comprehensive digital platform designed for **Birnagar M
 | **Backend** | Python 3.x, Django 5.x |
 | **AI Engine** | Birni AI (Bytez Proxy + Google Gemini Flash) |
 | **Database** | SQLite (Development) / PostgreSQL (Production) |
-| **Authentication** | Django Auth + OTP Verification (Fast2SMS) |
+| **Authentication** | Django Auth + Secure OTP Verification (Email) |
 | **Services** | SMTP Email, Bytez Unified Model Protocol |
 
 ---
@@ -60,8 +60,7 @@ DEBUG=True
 BYTEZ_API_KEY=your_bytez_token
 GEMINI_API_KEY=your_google_gemini_key
 
-# SMS & Email
-FAST2SMS_API_KEY=your_key
+# Email
 EMAIL_HOST_PASSWORD=your_app_password
 ```
 
@@ -78,10 +77,4 @@ python manage.py runserver
 - **OTP Protection**: Secured login and registration via two-factor authentication.
 - **Protected Media**: Images and documents uploaded by citizens are stored in a secured directory accessible only to authorized staff.
 
----
 
-## 📞 Support & Contacts
-For technical support regarding the platform, please contact:
-- **Municipality Office**: 03473-260227
-- **Email**: birnagarmunicipality@rediffmail.com
-- **Developed for**: Birnagar Municipality

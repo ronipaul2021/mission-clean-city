@@ -193,7 +193,6 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@birnagarmunic
 # THIRD-PARTY KEYS (all loaded from .env)
 # ==============================================================================
 
-FAST2SMS_API_KEY = config('FAST2SMS_API_KEY', default='')
 ADMIN_REGISTRATION_SECRET = config('ADMIN_REGISTRATION_SECRET', default='BMD@BIRNAGAR#2026')
 
 # Fernet symmetric key for Aadhaar encryption at rest.

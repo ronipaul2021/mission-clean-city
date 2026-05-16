@@ -4,9 +4,6 @@ Django==5.2.6
 # Image Processing (for photo compression)
 Pillow>=10.0.0
 
-# HTTP Requests (for Fast2SMS API)
-requests>=2.31.0
-
 # Security: Aadhaar Encryption at rest
 cryptography>=42.0.0
 
