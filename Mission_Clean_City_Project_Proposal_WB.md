@@ -39,6 +39,10 @@ h3, h4 {
     margin-bottom: 15px;
 }
 
+.page-break {
+    page-break-before: always;
+}
+
 img {
     display: block;
     margin: 20px auto;
@@ -113,15 +117,24 @@ The platform ensures a seamless flow of information between the public and the c
 4.  **Providing Suggestions:** Citizens can participate in city planning by submitting suggestions for cleanliness improvements.
     ![Submit Suggestion Form](./screenshots/c-sugg-submit.png)
 
+<div class="page-break"></div>
+
 ### 3.2 Administrative Side Workflow
+
 1.  **Admin Portal Login:** Municipal staff use their hardened, non-editable Employee IDs to log in.
     ![Admin Login](./screenshots/a-login.png)
+
+<div class="page-break"></div>
 
 2.  **Command Center Dashboard & Analytics:** The main dashboard provides real-time KPIs and ward-wise analytics.
     ![Admin Dashboard](./screenshots/a-analytics.png)
 
+<div class="page-break"></div>
+
 3.  **Managing Public Issues:** Admins can review, assign, and resolve reported issues from the command center.
     ![Admin Issue Management](./screenshots/a-dash-c-issue.png)
+
+<div class="page-break"></div>
 
 4.  **Reviewing Citizen Suggestions:** A dedicated section for administrators to evaluate community-driven ideas.
     ![Admin Suggestion Review](./screenshots/a-c-sugg.png)
