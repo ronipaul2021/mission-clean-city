@@ -15,6 +15,14 @@
 *   **Dirty roads**
 *   **Drainage blockage**
 *   **Unclean public areas**
+*   **Overflowing dustbins**
+*   **Improper waste disposal**
+*   **Streetlight issues**
+*   **Waterlogging**
+*   **Illegal dumping**
+*   **Lack of sanitation facilities**
+*   **Public health concerns related to cleanliness**
+*   **Other cleanliness-related issues**
 
 Through a user-friendly website or mobile platform, citizens can easily upload images and use live location tracking to report problems. These complaints are instantly sent to municipal authorities for faster action and monitoring. 
 
@@ -54,27 +62,50 @@ graph TD
 
 ---
 
-## 4. Key Features & Technical Implementation
+## 4. System Access & Visual Workflows
+To demonstrate the live functionality of the platform, the following test credentials can be used to access the prototype:
+
+### 4.1 Citizen Portal Access
+*   **Access URL:** `http://127.0.0.1:8000/login/`
+*   **Test Mobile Number:** `9883407189`
+*   **Test Password:** `roni@2003`
+
+**Citizen Dashboard Preview:**
+![Citizen Dashboard](screenshots/citizen_dashboard.png)
+*Above: The citizen's personalized command center showing submission history, status tracking, and profile management.*
+
+### 4.2 Administrative Command Center Access
+*   **Access URL:** `http://127.0.0.1:8000/login/admin/`
+*   **Admin ID:** `admin`
+*   **Password:** `admin@123`
+
+**Admin Dashboard Preview:**
+![Admin Dashboard](screenshots/admin_dashboard.png)
+*Above: The high-density administrative interface for ward-wise monitoring, work order generation, and analytics.*
+
+---
+
+## 5. Key Features & Technical Implementation
 The system successfully bridges the communication gap through a dual-ecosystem tailored for both the public and the administration.
 
-### 4.1 Citizen Side (Public Interface)
+### 5.1 Citizen Side (Public Interface)
 *   **Online Complaint Submission & Photo Upload:** Easy-to-use multimedia reporting.
 *   **GPS Location Tracking:** Pinpoints the exact location of the issue.
 *   **Live Complaint Status:** Citizens can track their complaints (Pending → In Progress → Resolved) in real-time.
 *   **Secure Registration:** OTP-based mobile/email verification ensures all users are genuine residents.
 
-### 4.2 Administration Side (Command Center)
+### 5.2 Administration Side (Command Center)
 *   **Smart Dashboard:** Visual KPIs displaying total complaints, resolution rates, and ward-wise performance.
 *   **Complaint & Worker Monitoring:** Ability to manage tasks and generate printable PDF work orders for on-ground staff directly from the portal.
 *   **Area-Wise Cleanliness Tracking:** Identifies infrastructure "hotspots" requiring urgent attention.
 *   **Hardened Identity Protection:** Administrative identities (Employee ID and Full Name) are locked to prevent internal impersonation. Admins manage profiles via OTP-verified secure workflows.
 
-### 4.3 AI Civic Assistant (Birni AI)
+### 5.3 AI Civic Assistant (Birni AI)
 *   **24/7 Chatbot:** Integrated AI assistant (powered by Google Gemini) capable of answering FAQs and guiding users on municipal policies.
 
 ---
 
-## 5. Technical Architecture & Security Framework
+## 6. Technical Architecture & Security Framework
 *For Technical Review Members:*
 The platform is built on modern, secure, and scalable technologies capable of handling state-wide traffic.
 *   **Backend Framework:** Python / Django (Highly secure and scalable, capable of supporting multi-tenant databases).
@@ -83,14 +114,14 @@ The platform is built on modern, secure, and scalable technologies capable of ha
 *   **Identity Protection:** Sensitive citizen data (such as Aadhaar numbers) is encrypted at rest using Advanced Symmetric Encryption (Fernet).
 *   **Automated Credential Dispatch:** Credentials for administrative staff are dispatched via encrypted official email, ensuring strict Role-Based Access Control (RBAC).
 
-### 5.1 Key Security & Administrative Workflows
+### 6.1 Key Security & Administrative Workflows
 *   **Admin Identity Hardening:** Every Administrator is assigned a unique `Employee ID` at registration. This ID and their `Full Name` are locked at the database level and cannot be modified by the user, preventing internal identity fraud.
 *   **Secure Email Modification:** Any change to an administrative email address requires mandatory 6-digit OTP verification sent to the *new* email address before the change is committed.
 *   **Isolated Password Recovery:** The system maintains separate, cryptographically secure recovery pipelines for Citizens and Administrators to prevent cross-account attacks.
 
 ---
 
-## 6. Benefits of the Project
+## 7. Benefits of the Project
 *   **Faster response** to public complaints.
 *   **Cleaner urban environment** and healthier communities.
 *   **Transparent monitoring system** that builds confidence in local government.
@@ -99,7 +130,7 @@ The platform is built on modern, secure, and scalable technologies capable of ha
 
 ---
 
-## 7. Future Scope & Scalability
+## 8. Future Scope & Scalability
 The architecture of the prototype was engineered to facilitate rapid expansion to build a massive state-wide infrastructure.
 *   **State-Wide Monitoring System (SaaS Model):** A single platform capable of hosting multiple municipalities simultaneously (e.g., Ranaghat, Krishnanagar) with complete data isolation for each.
 *   **Mobile Application:** Transitioning from a web portal to dedicated, native **Android and iOS applications** with offline-mode capabilities.
@@ -108,7 +139,7 @@ The architecture of the prototype was engineered to facilitate rapid expansion t
 
 ---
 
-## 8. Conclusion
+## 9. Conclusion
 **Urban City Clean** (Mission Clean City) is a modern technology-based initiative aimed at building a cleaner, smarter, and healthier West Bengal. This platform can help municipalities improve waste management efficiency while encouraging active citizen participation in maintaining city cleanliness. By transitioning this prototype into a Multi-Municipality platform, the Urban Development Department has the opportunity to establish a new gold standard for proactive civic administration.
 
 ---
