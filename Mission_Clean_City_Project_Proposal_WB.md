@@ -3,34 +3,34 @@
 
 body {
     font-family: 'EB Garamond', serif;
-    font-size: 14pt;
+    font-size: 12px;
     line-height: 1.6;
     color: #1a1a1a;
 }
 
-h1, h2, h3 {
-    font-family: 'EB Garamond', serif;
-    font-weight: 800;
+h1, h2, h3, h4 {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16px;
+    font-weight: bold;
     color: #000;
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: 0.3em;
+    border-bottom: 2px solid #000;
+    padding-bottom: 5px;
+    margin-top: 25px;
 }
 
 img {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
+    border: 2px solid #000;
+    border-radius: 2px;
+    padding: 4px;
     margin: 15px 0;
     max-width: 100%;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 blockquote {
     font-style: italic;
-    color: #555;
-    border-left: 4px solid #ccc;
+    color: #444;
+    border-left: 4px solid #000;
     padding-left: 15px;
-    margin: 20px 0;
 }
 </style>
 
