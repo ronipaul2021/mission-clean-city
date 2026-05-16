@@ -34,6 +34,18 @@ Through a user-friendly website or mobile platform, citizens can easily upload i
 
 ## 3. How the System Works
 The platform ensures a seamless flow of information between the public and the cleaning staff:
+
+```mermaid
+graph TD
+    A[Citizen: Uploads Complaint & Photo] --> B[System: Captures GPS Location]
+    B --> C[Admin: Receives Alert on Dashboard]
+    C --> D[Admin: Generates Work Order]
+    D --> E[Field Staff: Receives Task]
+    E --> F[Field Staff: Completes Task]
+    F --> G[System: Updates Status & Notifies Citizen]
+    G --> H[Citizen: Provides Rating & Feedback]
+```
+
 1.  **Citizen uploads complaint** with an image.
 2.  **System captures location automatically** using GPS coordinates.
 3.  **Complaint is sent instantly** to the municipality dashboard.
@@ -70,6 +82,11 @@ The platform is built on modern, secure, and scalable technologies capable of ha
 *   **Hardened Authentication:** Multi-factor authentication (MFA) via OTP for all critical account modifications.
 *   **Identity Protection:** Sensitive citizen data (such as Aadhaar numbers) is encrypted at rest using Advanced Symmetric Encryption (Fernet).
 *   **Automated Credential Dispatch:** Credentials for administrative staff are dispatched via encrypted official email, ensuring strict Role-Based Access Control (RBAC).
+
+### 5.1 Key Security & Administrative Workflows
+*   **Admin Identity Hardening:** Every Administrator is assigned a unique `Employee ID` at registration. This ID and their `Full Name` are locked at the database level and cannot be modified by the user, preventing internal identity fraud.
+*   **Secure Email Modification:** Any change to an administrative email address requires mandatory 6-digit OTP verification sent to the *new* email address before the change is committed.
+*   **Isolated Password Recovery:** The system maintains separate, cryptographically secure recovery pipelines for Citizens and Administrators to prevent cross-account attacks.
 
 ---
 
