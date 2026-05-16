@@ -39,6 +39,8 @@ The current prototype successfully demonstrates the core capabilities of the pla
 
 ### 4.2 Admin Command Center (Laptop/Desktop Interface)
 * **Exclusive Access:** Designed strictly for desktop/laptop environments to handle high-density data management.
+* **Hardened Identity Protection:** Administrative identities (Employee ID and Full Name) are locked and non-editable to prevent internal impersonation or fraud.
+* **Secure Self-Service:** Admins can manage their profiles via OTP-verified email updates and secure password recovery workflows.
 * **Real-Time Analytics Dashboard:** Visual KPIs displaying total complaints, resolution rates, and ward-wise performance metrics.
 * **Automated Work Orders:** Ability to generate printable PDF work orders for on-ground staff directly from the portal.
 
@@ -68,9 +70,10 @@ The platform is built on modern, secure, and scalable technologies capable of ha
 
 * **Backend Framework:** Python / Django (Highly secure and scalable, capable of supporting multi-tenant databases).
 * **AI Integration:** Google Gemini NLP models.
+* **Hardened Authentication:** Multi-factor authentication (MFA) via OTP for all critical account modifications (Email/Password).
 * **Identity Protection:** Sensitive citizen data (such as Aadhaar numbers) is encrypted at rest using Advanced Symmetric Encryption (Fernet).
-* **Access Control:** Strict Role-Based Access Control (RBAC) ensuring absolute separation between Citizen and Administrative privileges.
-* **Session Security:** Temporary OTP sessions are strictly time-bound and purged from memory immediately after use.
+* **Automated Credential Dispatch:** Credentials for administrative staff are dispatched via encrypted official email, ensuring only authorized personnel gain access.
+* **Session Security:** Temporary security keys and OTP sessions are strictly time-bound and purged from memory immediately after use.
 
 ---
 
