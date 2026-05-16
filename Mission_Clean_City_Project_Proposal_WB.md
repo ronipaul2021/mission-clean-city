@@ -3,27 +3,48 @@
 
 body {
     font-family: 'EB Garamond', serif;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.6;
     color: #1a1a1a;
+    padding: 40px;
 }
 
-h1, h2, h3, h4 {
-    font-family: 'Times New Roman', Times, serif;
+h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    border-bottom: 1.5px solid #000;
+}
+
+h2 {
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    font-weight: normal;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    border-bottom: 1.5px solid #000;
+}
+
+h3, h4 {
+    font-family: 'EB Garamond', serif;
     font-size: 16px;
     font-weight: bold;
-    color: #000;
-    border-bottom: 2px solid #000;
-    padding-bottom: 5px;
     margin-top: 25px;
 }
 
+.roadmap {
+    font-style: italic;
+    margin-bottom: 15px;
+}
+
 img {
+    display: block;
+    margin: 20px auto;
+    max-width: 85%; /* Resized to look better in document */
     border: 2px solid #000;
-    border-radius: 2px;
-    padding: 4px;
-    margin: 15px 0;
-    max-width: 100%;
+    padding: 5px;
 }
 
 blockquote {
@@ -36,7 +57,7 @@ blockquote {
 
 # URBAN CITY CLEAN (MISSION CLEAN CITY)
 ## Smart Digital Cleanliness Monitoring System for Smart Bengal
-*Strategic Project Proposal & Scalability Roadmap*
+<div class="roadmap">Strategic Project Proposal & Scalability Roadmap</div>
 
 **Prepared For:** Urban Development Department, Government of West Bengal  
 **Current Phase:** Live Prototype (Birnagar Municipality)  
