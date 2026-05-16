@@ -19,5 +19,8 @@ gunicorn>=21.2.0
 # AI-powered face detection & auto-crop for profile photos
 opencv-python-headless
 
+# AI Chatbot Assistant (Resilient Architecture)
+bytez>=3.0.0
+
 # PostgreSQL adapter (optional, for production DB switch)
 # psycopg2-binary>=2.9.9

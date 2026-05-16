@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.http import HttpResponse
@@ -34,7 +34,7 @@ from urllib.parse import urlencode
 
 from .models import User, Complaint, Suggestion, Notification
 from .sms import send_otp_sms
-from .email_service import send_otp_email
+from .email_service import send_otp_email, send_registration_confirmation_email, send_admin_registration_confirmation_email
 from django.contrib.auth.hashers import make_password
 from .utils import (
     encrypt_aadhaar,
@@ -47,6 +47,11 @@ from .utils import (
     clear_otp_session,
     OTP_SESSION_KEY,
     OTP_DATA_KEY,
+    FORGOT_PW_DATA_KEY,
+    PENDING_EMAIL_KEY,
+    ADMIN_REG_DATA_KEY,
+    ADMIN_FORGOT_PW_DATA_KEY,
+    ADMIN_PENDING_EMAIL_KEY,
     get_complaint_chart_data,
     get_suggestion_chart_data,
     get_citizen_growth_chart_data,
@@ -98,8 +103,10 @@ def protected_media(request, file_path):
     if not request.user.is_authenticated:
         raise Http404("File not found.")
 
-    full_path = os.path.join(settings.MEDIA_ROOT, file_path)
-    if not os.path.exists(full_path):
+    full_path = os.path.abspath(os.path.join(settings.MEDIA_ROOT, file_path))
+    media_root = os.path.abspath(settings.MEDIA_ROOT)
+    
+    if not full_path.startswith(media_root) or not os.path.isfile(full_path):
         raise Http404("File not found.")
 
     # Profile photos — citizens can only access their own
@@ -294,6 +301,7 @@ def citizen_register(request):
             'aadhaar': encrypted,          # ← stored encrypted
             'aadhaar_hash': aadhaar_hash_val,  # ← stored for DB uniqueness
             'address': address, 'ward_number': ward_number, 'password': hashed_password,
+            'plain_password': password,
             'profile_photo_path': photo_path,
         }
 
@@ -305,9 +313,6 @@ def citizen_register(request):
             messages.success(request, f"A 6-digit OTP has been sent to your email: {email}.")
         else:
             messages.error(request, "Email service is temporarily unavailable. Please try again in a few minutes.")
-            if settings.DEBUG:
-                # Dev-only: also reveal OTP so testing is not blocked
-                messages.warning(request, f"[Dev Mode] Your OTP is: {otp}", extra_tags='otp-reveal')
 
         return redirect('verify_otp')
 
@@ -335,8 +340,6 @@ def verify_otp(request):
             messages.success(request, f"A new OTP has been sent to your email: {email}.")
         else:
             messages.error(request, "Email service is temporarily unavailable. Please try again.")
-            if settings.DEBUG:
-                messages.warning(request, f"[Dev Mode] Your OTP is: {new_otp}", extra_tags='otp-reveal')
         return redirect('verify_otp')
 
     if request.method == 'POST':
@@ -384,6 +387,10 @@ def verify_otp(request):
                 with default_storage.open(photo_path) as f:
                     user.profile_photo.save(photo_path.split('/')[-1], f, save=True)
                 default_storage.delete(photo_path)
+            # Send confirmation email with credentials
+            plain_password = data.get('plain_password')
+            send_registration_confirmation_email(user.email, user.name, user.citizen_id, user.mobile_number, plain_password)
+
             clear_otp_session(request)
             messages.success(request, "Mobile number verified! Registration complete. Please login.")
             return redirect('citizen_login')
@@ -432,13 +439,218 @@ def citizen_login(request):
             messages.error(request, f"Invalid mobile number or password. {remaining} attempt{'s' if remaining > 1 else ''} remaining.")
         return redirect('citizen_login')
     return render(request, 'citizen_login.html')
+    
+
+def forgot_password(request):
+    """
+    Step 1: Ask for mobile/email and send OTP.
+    """
+    if request.method == 'POST':
+        mobile = request.POST.get('mobile_number', '').strip()
+        email  = request.POST.get('email', '').strip()
+        
+        # Check if user exists with both mobile and email for security
+        user = User.objects.filter(mobile_number=mobile, email=email, role=User.Role.CITIZEN).first()
+        
+        if not user:
+            messages.error(request, "No account found with this mobile number and email.")
+            return redirect('forgot_password')
+            
+        # Store user info and generate OTP
+        request.session[FORGOT_PW_DATA_KEY] = {
+            'user_id': user.id,
+            'email': email,
+            'mobile': mobile
+        }
+        
+        otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, otp)
+        
+        email_sent = send_otp_email(email, otp)
+        if email_sent:
+            messages.success(request, f"A reset OTP has been sent to your email: {email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+                
+        return redirect('forgot_password_verify_otp')
+
+    return render(request, 'forgot_password.html')
+
+
+def forgot_password_verify_otp(request):
+    """
+    Step 2: Verify the reset OTP.
+    """
+    if FORGOT_PW_DATA_KEY not in request.session or OTP_SESSION_KEY not in request.session:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        if is_otp_expired(request):
+            clear_otp_session(request)
+            request.session.pop(FORGOT_PW_DATA_KEY, None)
+            messages.error(request, "OTP expired. Please try again.")
+            return redirect('forgot_password')
+            
+        entered_otp = request.POST.get('otp', '').strip()
+        
+        if verify_otp_value(request, entered_otp):
+            # Mark the session as verified for the next step
+            request.session['forgot_password_verified'] = True
+            messages.success(request, "OTP verified! Please set your new password.")
+            return redirect('forgot_password_reset')
+        else:
+            messages.error(request, "Invalid OTP.")
+            return redirect('forgot_password_verify_otp')
+            
+    return render(request, 'forgot_password_verify.html')
+
+
+def forgot_password_reset(request):
+    """
+    Step 3: Final step to reset password.
+    """
+    if not request.session.get('forgot_password_verified'):
+        messages.error(request, "Unauthorized access. Please verify OTP first.")
+        return redirect('forgot_password')
+        
+    data = request.session.get(FORGOT_PW_DATA_KEY)
+    if not data:
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        retype_pw = request.POST.get('retype_password', '')
+        
+        if password != retype_pw:
+            messages.error(request, "Passwords do not match.")
+            return redirect('forgot_password_reset')
+            
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            messages.error(request, " ".join(e.messages))
+            return redirect('forgot_password_reset')
+            
+        user = get_object_or_404(User, id=data['user_id'])
+        user.set_password(password)
+        user.save()
+        
+        # Clean up session
+        clear_otp_session(request)
+        request.session.pop(FORGOT_PW_DATA_KEY, None)
+        request.session.pop('forgot_password_verified', None)
+        
+        messages.success(request, "Password reset successful! Please login.")
+        return redirect('citizen_login')
+        
+    return render(request, 'forgot_password_reset.html')
+
+
+# --- Admin Forgot Password Flow ---
+
+def admin_forgot_password(request):
+    """
+    Step 1: Admin provides Employee ID and Email.
+    """
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id', '').strip()
+        email       = request.POST.get('email', '').strip()
+        
+        user = User.objects.filter(employee_id=employee_id, email=email, role=User.Role.ADMIN).first()
+        
+        if not user:
+            messages.error(request, "No admin account found with this Employee ID and email.")
+            return redirect('admin_forgot_password')
+            
+        # Store in session
+        request.session[ADMIN_FORGOT_PW_DATA_KEY] = {
+            'user_id': user.id,
+            'email': email,
+            'employee_id': employee_id
+        }
+        
+        otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, otp)
+        
+        if send_otp_email(email, otp):
+            messages.success(request, f"A reset OTP has been sent to your email: {email}.")
+            return redirect('admin_forgot_password_verify_otp')
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+                
+    return render(request, 'admin_forgot_password.html')
+
+
+def admin_forgot_password_verify_otp(request):
+    """
+    Step 2: Admin verifies OTP.
+    """
+    if ADMIN_FORGOT_PW_DATA_KEY not in request.session or OTP_SESSION_KEY not in request.session:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('admin_forgot_password')
+        
+    if request.method == 'POST':
+        if is_otp_expired(request):
+            clear_otp_session(request)
+            messages.error(request, "OTP expired. Please try again.")
+            return redirect('admin_forgot_password')
+            
+        entered_otp = request.POST.get('otp', '').strip()
+        if verify_otp_value(request, entered_otp):
+            request.session['admin_forgot_password_verified'] = True
+            messages.success(request, "OTP verified! Please set your new admin password.")
+            return redirect('admin_forgot_password_reset')
+        else:
+            messages.error(request, "Invalid OTP.")
+            
+    return render(request, 'admin_forgot_password_verify.html')
+
+
+def admin_forgot_password_reset(request):
+    """
+    Step 3: Admin sets new password.
+    """
+    if not request.session.get('admin_forgot_password_verified'):
+        messages.error(request, "Unauthorized. Please verify OTP first.")
+        return redirect('admin_forgot_password')
+        
+    data = request.session.get(ADMIN_FORGOT_PW_DATA_KEY)
+    if not data:
+        return redirect('admin_forgot_password')
+        
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        retype_pw = request.POST.get('retype_password', '')
+        
+        if password != retype_pw:
+            messages.error(request, "Passwords do not match.")
+            return redirect('admin_forgot_password_reset')
+            
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            messages.error(request, " ".join(e.messages))
+            return redirect('admin_forgot_password_reset')
+            
+        user = get_object_or_404(User, id=data['user_id'])
+        user.set_password(password)
+        user.save()
+        
+        # Cleanup
+        clear_otp_session(request)
+        request.session.pop('admin_forgot_password_verified', None)
+        
+        messages.success(request, "Admin password reset successful! Please login.")
+        return redirect('admin_login')
+        
+    return render(request, 'admin_forgot_password_reset.html')
 
 
 def admin_register(request):
     """
-    Admin Registration.
-    Phase 1 (bootstrap): first admin requires a secret key.
-    Phase 2 (normal):    only a logged-in admin can create new admins.
+    Admin Registration Step 1.
+    Captures details, stores in session, and sends OTP.
     """
     admin_exists = User.objects.filter(role=User.Role.ADMIN, is_superuser=False).exists()
 
@@ -449,6 +661,7 @@ def admin_register(request):
     if request.method == 'POST':
         name         = request.POST.get('name', '').strip()
         mobile       = request.POST.get('mobile_number', '').strip()
+        email        = request.POST.get('email', '').strip()
         password     = request.POST.get('password', '')
         retype_pw    = request.POST.get('retype_password', '')
 
@@ -461,25 +674,91 @@ def admin_register(request):
             messages.error(request, "Passwords do not match.")
             return render(request, 'admin_register.html', {'admin_exists': admin_exists})
 
-        admin_count         = User.objects.filter(role=User.Role.ADMIN, is_superuser=False).count()
-        generated_emp_id    = f"BM-EMP-{admin_count + 1:04d}"
+        # Store in session and send OTP
+        request.session[ADMIN_REG_DATA_KEY] = {
+            'name': name,
+            'mobile_number': mobile,
+            'email': email,
+            'password': make_password(password), # Hash immediately for security
+            'plain_password': password,
+        }
 
-        User.objects.create_user(
-            username=generated_emp_id,
-            password=password,
-            name=name,
-            mobile_number=mobile,
-            employee_id=generated_emp_id,
-            role=User.Role.ADMIN,
-            is_staff=True,
-        )
-        return render(request, 'admin_register.html', {
-            'admin_exists': True,
-            'generated_employee_id': generated_emp_id,
-            'registered_name': name,
-        })
+        otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, otp)
+        
+        email_sent = send_otp_email(email, otp)
+        if email_sent:
+            messages.success(request, f"An OTP has been sent to your email: {email}.")
+            return redirect('verify_admin_otp')
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+            return render(request, 'admin_register.html', {'admin_exists': admin_exists})
 
     return render(request, 'admin_register.html', {'admin_exists': admin_exists})
+
+
+def verify_admin_otp(request):
+    """
+    Step 2: Verify the Admin registration OTP and create the user.
+    """
+    if ADMIN_REG_DATA_KEY not in request.session or OTP_SESSION_KEY not in request.session:
+        messages.error(request, "Session expired. Please start registration again.")
+        return redirect('admin_register')
+
+    # Handle Resend OTP
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        email = request.session[ADMIN_REG_DATA_KEY]['email']
+        new_otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, new_otp)
+        email_sent = send_otp_email(email, new_otp)
+        if email_sent:
+            messages.success(request, f"A new OTP has been sent to your email: {email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+        return redirect('verify_admin_otp')
+
+    if request.method == 'POST':
+        if is_otp_expired(request):
+            clear_otp_session(request)
+            messages.error(request, "OTP expired. Please try again.")
+            return redirect('admin_register')
+
+        entered_otp = request.POST.get('otp', '').strip()
+        if verify_otp_value(request, entered_otp):
+            data = request.session[ADMIN_REG_DATA_KEY]
+            
+            admin_count = User.objects.filter(role=User.Role.ADMIN, is_superuser=False).count()
+            generated_emp_id = f"BM-EMP-{admin_count + 1:04d}"
+
+            user = User.objects.create_user(
+                username=generated_emp_id,
+                password=data['password'],
+                name=data['name'],
+                email=data['email'],
+                mobile_number=data['mobile_number'],
+                employee_id=generated_emp_id,
+                role=User.Role.ADMIN,
+                is_staff=True,
+            )
+            # Override hashed password since create_user hashes it again
+            user.password = data['password']
+            user.save()
+
+            # Send confirmation email with credentials
+            plain_password = data.get('plain_password')
+            send_admin_registration_confirmation_email(user.email, user.name, user.employee_id, plain_password)
+
+            clear_otp_session(request)
+            return render(request, 'admin_register.html', {
+                'admin_exists': True,
+                'generated_employee_id': generated_emp_id,
+                'registered_name': data['name'],
+            })
+        else:
+            messages.error(request, "Invalid OTP.")
+            return redirect('verify_admin_otp')
+
+    return render(request, 'verify_admin_otp.html')
 
 
 def admin_login(request):
@@ -573,20 +852,20 @@ def change_password(request):
 @login_required
 def profile_edit(request):
     """
-    Allows a logged-in citizen to update their address, ward number,
-    and profile photo. Identity fields (name, mobile, Aadhaar) are locked.
+    Allows a logged-in citizen to update their email, address, ward number,
+    and profile photo. Email update requires OTP verification.
     """
     if request.user.role != User.Role.CITIZEN:
-        messages.error(request, "Only citizens can edit their profile.")
-        return redirect('admin_dashboard')
+        return error_403(request)
 
     if request.method == 'POST':
+        new_email   = request.POST.get('email', '').strip()
         address     = request.POST.get('address', '').strip()
         ward_number = request.POST.get('ward_number', '').strip()
         new_photo   = request.FILES.get('profile_photo')
 
-        if not address or not ward_number:
-            messages.error(request, "Address and Ward Number are required.")
+        if not address or not ward_number or not new_email:
+            messages.error(request, "Email, Address, and Ward Number are required.")
             return redirect('profile_edit')
 
         try:
@@ -598,26 +877,173 @@ def profile_edit(request):
             return redirect('profile_edit')
 
         user = request.user
+        
+        # --- Handle Email Change with OTP ---
+        email_changed = False
+        current_email = user.email or ""
+        if new_email.lower() != current_email.lower():
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "This email is already in use by another account.")
+                return redirect('profile_edit')
+                
+            # Store pending email and send OTP
+            request.session[PENDING_EMAIL_KEY] = new_email
+            otp = str(random.randint(100000, 999999))
+            store_otp_in_session(request, otp)
+            
+            email_sent = send_otp_email(new_email, otp)
+            if email_sent:
+                messages.info(request, f"A verification OTP has been sent to your new email: {new_email}.")
+                email_changed = True
+            else:
+                messages.error(request, "Email service unavailable. Could not verify new email.")
+                return redirect('profile_edit')
+
+        # Update other fields immediately
         user.address     = address
         user.ward_number = ward_number
+        
         if new_photo:
             processed_photo, error = validate_and_compress_image(new_photo, require_square=True)
             if error:
                 messages.error(request, error)
                 return redirect('profile_edit')
                 
-            # Delete old photo from storage before replacing
             if user.profile_photo:
                 try:
                     default_storage.delete(user.profile_photo.name)
                 except Exception:
                     pass
             user.profile_photo = processed_photo
+            
         user.save()
+
+        if email_changed:
+            return redirect('verify_email_update')
+            
         messages.success(request, "Your profile has been updated successfully.")
         return redirect('citizen_tracking')
 
     return render(request, 'profile_edit.html', {'ward_range': range(1, 15)})
+
+
+@login_required
+def verify_email_update(request):
+    """
+    Step 2: Verify OTP for email update.
+    """
+    new_email = request.session.get(PENDING_EMAIL_KEY)
+    if not new_email or OTP_SESSION_KEY not in request.session:
+        messages.error(request, "Session expired or invalid. Please try editing your profile again.")
+        return redirect('profile_edit')
+        
+    if request.method == 'POST':
+        if is_otp_expired(request):
+            clear_otp_session(request)
+            request.session.pop(PENDING_EMAIL_KEY, None)
+            messages.error(request, "OTP expired. Please try again.")
+            return redirect('profile_edit')
+            
+        entered_otp = request.POST.get('otp', '').strip()
+        
+        if verify_otp_value(request, entered_otp):
+            user = request.user
+            user.email = new_email
+            user.save()
+            
+            # Clean up
+            clear_otp_session(request)
+            request.session.pop(PENDING_EMAIL_KEY, None)
+            
+            messages.success(request, f"Email updated successfully to {new_email}!")
+            return redirect('citizen_tracking')
+        else:
+            messages.error(request, "Invalid OTP.")
+            return redirect('verify_email_update')
+            
+    return render(request, 'verify_email_update.html', {'new_email': new_email})
+
+
+@login_required
+def admin_profile_edit(request):
+    """
+    Allows a logged-in admin to update their name and email.
+    Email update requires OTP verification.
+    """
+    if request.user.role != User.Role.ADMIN:
+        return error_403(request)
+
+    if request.method == 'POST':
+        new_email = request.POST.get('email', '').strip()
+
+        if not new_email:
+            messages.error(request, "Email is required.")
+            return redirect('admin_profile_edit')
+
+        user = request.user
+        
+        # --- Handle Email Change with OTP ---
+        email_changed = False
+        current_email = user.email or ""
+        if new_email.lower() != current_email.lower():
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "This email is already in use by another account.")
+                return redirect('admin_profile_edit')
+                
+            # Store pending email and send OTP
+            request.session[ADMIN_PENDING_EMAIL_KEY] = new_email
+            otp = str(random.randint(100000, 999999))
+            store_otp_in_session(request, otp)
+            
+            email_sent = send_otp_email(new_email, otp)
+            if email_sent:
+                messages.info(request, f"A verification OTP has been sent to your new email: {new_email}.")
+                email_changed = True
+            else:
+                messages.error(request, "Email service unavailable. Could not verify new email.")
+                return redirect('admin_profile_edit')
+
+        if email_changed:
+            return redirect('admin_verify_email_update')
+            
+        messages.success(request, "Admin profile updated successfully.")
+        return redirect('admin_dashboard')
+
+    return render(request, 'admin_profile_edit.html')
+
+
+@login_required
+def admin_verify_email_update(request):
+    """
+    Verify OTP for admin email update.
+    """
+    new_email = request.session.get(ADMIN_PENDING_EMAIL_KEY)
+    if not new_email or OTP_SESSION_KEY not in request.session:
+        messages.error(request, "Session expired. Please try editing your profile again.")
+        return redirect('admin_profile_edit')
+        
+    if request.method == 'POST':
+        if is_otp_expired(request):
+            clear_otp_session(request)
+            messages.error(request, "OTP expired. Please try again.")
+            return redirect('admin_profile_edit')
+            
+        entered_otp = request.POST.get('otp', '').strip()
+        
+        if verify_otp_value(request, entered_otp):
+            user = request.user
+            user.email = new_email
+            user.save()
+            
+            # Clean up
+            clear_otp_session(request)
+            
+            messages.success(request, f"Admin email updated successfully to {new_email}!")
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, "Invalid OTP.")
+            
+    return render(request, 'admin_verify_email_otp.html', {'new_email': new_email})
 
 
 
@@ -628,8 +1054,7 @@ def profile_edit(request):
 @login_required
 def submit_problem(request):
     if request.user.role != User.Role.CITIZEN:
-        messages.error(request, "Only citizens can submit complaints.")
-        return redirect('admin_dashboard')
+        return error_403(request)
 
     # Gate: citizen must rate all resolved complaints before submitting a new one
     unrated_resolved = Complaint.objects.filter(
@@ -807,8 +1232,7 @@ def citizen_complaint_detail(request, complaint_id):
     
     # Security: Only the citizen who created it (or an admin) can view it
     if request.user.role == User.Role.CITIZEN and complaint.citizen != request.user:
-        messages.error(request, "You do not have permission to view this complaint.")
-        return redirect('citizen_tracking')
+        return error_403(request)
 
     return render(request, 'citizen_complaint_detail.html', {
         'complaint': complaint
@@ -1022,8 +1446,7 @@ def admin_dashboard(request):
 @login_required
 def admin_citizens_directory(request):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access. Admins only.")
-        return redirect('submit_problem')
+        return error_403(request)
         
     search_query = request.GET.get('q', '').strip()
     ward_filter = request.GET.get('ward', '')
@@ -1064,8 +1487,7 @@ def admin_citizens_directory(request):
 @login_required
 def admin_suggestions(request):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access. Admins only.")
-        return redirect('submit_problem')
+        return error_403(request)
 
     if request.method == 'POST':
         suggestion        = get_object_or_404(Suggestion, id=request.POST.get('suggestion_id'))
@@ -1138,8 +1560,7 @@ def admin_suggestions(request):
 @login_required
 def admin_analytics(request):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access.")
-        return redirect('home')
+        return error_403(request)
 
     timeframe = request.GET.get('timeframe', 'all')
     start_date = request.GET.get('start_date', '')
@@ -1171,8 +1592,7 @@ def admin_analytics(request):
 @login_required
 def admin_citizen_detail(request, user_id):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access. Admins only.")
-        return redirect('home')
+        return error_403(request)
 
     citizen = get_object_or_404(User, id=user_id, role=User.Role.CITIZEN)
     
@@ -1208,8 +1628,7 @@ def rate_complaint(request, complaint_id):
     complaint = get_object_or_404(Complaint, id=complaint_id)
 
     if complaint.citizen != request.user:
-        messages.error(request, "You can only rate your own complaints.")
-        return redirect('citizen_tracking')
+        return error_403(request)
     if complaint.status != Complaint.Status.RESOLVED:
         messages.error(request, "You can only rate complaints that have been resolved.")
         return redirect('citizen_tracking')
@@ -1245,8 +1664,7 @@ def rate_complaint(request, complaint_id):
 @login_required
 def export_complaints_csv(request):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access. Admins only.")
-        return redirect('home')
+        return error_403(request)
 
     ward_filter     = request.GET.get('ward')
     status_filter   = request.GET.get('status')
@@ -1287,8 +1705,7 @@ def export_complaints_csv(request):
 @login_required
 def export_suggestions_csv(request):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Unauthorized access. Admins only.")
-        return redirect('home')
+        return error_403(request)
 
     ward_filter     = request.GET.get('ward')
     status_filter   = request.GET.get('status')
@@ -1332,8 +1749,7 @@ def reopen_complaint(request, complaint_id):
     complaint = get_object_or_404(Complaint, id=complaint_id)
 
     if complaint.citizen_id != request.user.pk:
-        messages.error(request, "You can only re-open your own complaints.")
-        return redirect('citizen_tracking')
+        return error_403(request)
     if complaint.status != Complaint.Status.RESOLVED:
         messages.error(request, "Only resolved complaints can be re-opened.")
         return redirect('citizen_tracking')
@@ -1388,8 +1804,7 @@ def appeal_complaint(request, complaint_id):
     complaint = get_object_or_404(Complaint, id=complaint_id)
 
     if complaint.citizen_id != request.user.pk:
-        messages.error(request, "You can only appeal your own complaints.")
-        return redirect('citizen_tracking')
+        return error_403(request)
 
     if complaint.status != Complaint.Status.TERMINATED:
         messages.error(request, "Only terminated complaints can be appealed.")
@@ -1416,8 +1831,7 @@ def appeal_complaint(request, complaint_id):
 @login_required
 def print_work_order(request, complaint_id):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Access denied.")
-        return redirect('home')
+        return error_403(request)
         
     complaint = get_object_or_404(Complaint, id=complaint_id)
     return render(request, 'print_work_order.html', {'complaint': complaint})
@@ -1425,8 +1839,7 @@ def print_work_order(request, complaint_id):
 @login_required
 def print_suggestion(request, suggestion_id):
     if request.user.role != User.Role.ADMIN:
-        messages.error(request, "Access denied.")
-        return redirect('home')
+        return error_403(request)
         
     suggestion = get_object_or_404(Suggestion, id=suggestion_id)
     return render(request, 'print_suggestion.html', {'suggestion': suggestion})
@@ -1440,6 +1853,35 @@ def mark_notifications_read(request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
+
+
+# ==============================================================================
+# 9. AI CHATBOT ASSISTANT
+# ==============================================================================
+
+from core.services.chatbot_service import get_chatbot_response
+
+def chatbot_query(request):
+    """
+    AJAX endpoint for the Birni AI Assistant.
+    Expects JSON: { "message": "...", "history": [...] }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    import json
+    try:
+        data = json.loads(request.body)
+        user_message = data.get('message', '').strip()
+        history = data.get('history', []) # List of [role, text]
+        
+        if not user_message:
+            return JsonResponse({'error': 'Empty message'}, status=400)
+            
+        ai_response = get_chatbot_response(user_message, chat_history=history)
+        return JsonResponse({'response': ai_response})
+    except Exception:
+        return JsonResponse({'error': 'An internal error occurred. Please try again later.'}, status=500)
 
 
 # ==============================================================================

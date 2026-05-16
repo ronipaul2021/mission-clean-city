@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Aadhaar Number</label>
-                        <input type="text" readonly value="{% if user.is_authenticated %}{{ user.encrypted_aadhaar }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
+                        <input type="text" readonly value="{% if user.is_authenticated %}XXXX-XXXX-{{ user.encrypted_aadhaar|slice:'-4:' }}{% endif %}" class="bg-gray-100 cursor-not-allowed mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Your Ward Number</label>

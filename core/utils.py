@@ -140,6 +140,11 @@ def reencrypt_aadhaar_if_needed(user) -> bool:
 OTP_SESSION_KEY = 'registration_otp'
 OTP_TIMESTAMP_KEY = 'otp_created_at'
 OTP_DATA_KEY = 'registration_data'
+FORGOT_PW_DATA_KEY = 'forgot_password_data'
+PENDING_EMAIL_KEY = 'pending_email_update'
+ADMIN_REG_DATA_KEY = 'admin_registration_data'
+ADMIN_FORGOT_PW_DATA_KEY = 'admin_forgot_password_data'
+ADMIN_PENDING_EMAIL_KEY = 'admin_pending_email_update'
 
 
 def _hash_otp(otp: str) -> str:
@@ -169,7 +174,7 @@ def is_otp_expired(request) -> bool:
 
 def clear_otp_session(request) -> None:
     """Remove OTP, timestamp, and registration data from the session."""
-    for key in (OTP_SESSION_KEY, OTP_TIMESTAMP_KEY, OTP_DATA_KEY):
+    for key in (OTP_SESSION_KEY, OTP_TIMESTAMP_KEY, OTP_DATA_KEY, ADMIN_REG_DATA_KEY, ADMIN_FORGOT_PW_DATA_KEY, ADMIN_PENDING_EMAIL_KEY):
         request.session.pop(key, None)
 
 
@@ -573,7 +578,7 @@ def validate_and_compress_image(image_file, max_kb=100, require_square=True):
                     break
 
         buf.seek(0)
-        final_name = os.path.splitext(image_file.name)[0] + '.jpg'
+        final_name = os.path.splitext(os.path.basename(image_file.name))[0] + '.jpg'
         return ContentFile(buf.read(), name=final_name), None
 
     except Exception as e:
@@ -645,7 +650,7 @@ def auto_crop_face(image_file):
         pil_img.save(buf, format='JPEG', quality=100)
         buf.seek(0)
 
-        final_name = os.path.splitext(image_file.name)[0] + '.jpg'
+        final_name = os.path.splitext(os.path.basename(image_file.name))[0] + '.jpg'
         new_file = ContentFile(buf.read(), name=final_name)
         return validate_and_compress_image(new_file, max_kb=100, require_square=True)
 
