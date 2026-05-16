@@ -37,3 +37,8 @@ django_cache/
 dist/
 build/
 *.egg-info/
+
+# Project Documentation (Private)
+Mission_Clean_City_Project_Proposal_WB.md
+Mission_Clean_City_Project_Proposal_WB.pdf
+screenshots/
