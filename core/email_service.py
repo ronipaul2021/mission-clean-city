@@ -4,15 +4,16 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-def send_otp_email(email_address: str, otp: str) -> bool:
+def send_otp_email(email_address: str, otp: str, purpose: str = 'Verification') -> bool:
     """
     Send a 6-digit OTP to the provided email address.
+    purpose: short label for the subject, e.g. 'Registration', 'Password Reset', 'Email Verification'.
     Returns True if successful, False otherwise.
     """
-    subject = 'Your Registration OTP - Mission Clean City'
+    subject = f'Your {purpose} OTP - Mission Clean City'
     message = (
-        f"Dear Citizen,\n\n"
-        f"Your One-Time Password (OTP) for Birnagar Municipality Civic Platform registration is: {otp}\n\n"
+        f"Dear User,\n\n"
+        f"Your One-Time Password (OTP) for Birnagar Municipality Civic Platform is: {otp}\n\n"
         f"This OTP is valid for {getattr(settings, 'OTP_EXPIRY_MINUTES', 10)} minutes. "
         f"Please do not share this code with anyone.\n\n"
         f"Regards,\n"
@@ -29,13 +30,13 @@ def send_otp_email(email_address: str, otp: str) -> bool:
             fail_silently=False,
         )
         if sent:
-            logger.info(f"OTP successfully sent to email: {email_address}")
+            logger.info(f"OTP ({purpose}) successfully sent to email: {email_address}")
             return True
         else:
-            logger.error(f"Failed to send OTP to email: {email_address}")
+            logger.error(f"Failed to send OTP ({purpose}) to email: {email_address}")
             return False
     except Exception as e:
-        logger.error(f"Exception while sending OTP to email {email_address}: {e}")
+        logger.error(f"Exception while sending OTP ({purpose}) to {email_address}: {e}")
         return False
 
 def send_registration_confirmation_email(email_address: str, name: str, citizen_id: str, mobile_number: str, password: str) -> bool:

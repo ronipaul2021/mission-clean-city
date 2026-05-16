@@ -26,6 +26,20 @@
                 </div>
             </form>
             
+            <div class="mt-6 text-center border-t border-gray-100 pt-6">
+                <p class="text-sm text-gray-500">Didn't receive the OTP?</p>
+                <form id="resend-form" action="{% url 'admin_verify_email_update' %}" method="POST" class="mt-2 inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="resend">
+                    <button type="submit" id="resend-btn" class="text-sm font-semibold text-secondary hover:text-primary-dark disabled:opacity-50 disabled:cursor-not-allowed">
+                        Resend OTP
+                    </button>
+                </form>
+                <p id="countdown-text" class="mt-2 text-xs text-gray-400 hidden">
+                    Resend available in <span id="seconds">60</span>s
+                </p>
+            </div>
+            
             <div class="mt-6 text-center">
                 <a href="{% url 'admin_profile_edit' %}" class="text-sm font-medium text-gray-500 hover:text-secondary transition-colors">
                     ← Back to Edit Profile
@@ -34,4 +48,32 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const resendBtn = document.getElementById('resend-btn');
+        const countdownText = document.getElementById('countdown-text');
+        const secondsSpan = document.getElementById('seconds');
+        let timeLeft = 60;
+
+        function startCountdown() {
+            resendBtn.disabled = true;
+            countdownText.classList.remove('hidden');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                secondsSpan.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    resendBtn.disabled = false;
+                    countdownText.classList.add('hidden');
+                    timeLeft = 60;
+                }
+            }, 1000);
+        }
+
+        startCountdown();
+    });
+</script>
 {% endblock %}

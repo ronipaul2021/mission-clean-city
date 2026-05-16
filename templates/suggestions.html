@@ -116,8 +116,24 @@
                     </div>
 
                     <div class="sm:col-span-2" id="description_container">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Your Idea / Suggestion <span id="desc_asterisk" class="hidden text-red-500">*</span></label>
-                        <textarea id="description" name="description" rows="5" class="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Tell us how we can make Birnagar better..."></textarea>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Your Idea / Suggestion <span id="desc_asterisk" class="hidden text-red-500">*</span></label>
+                            <button type="button" id="ai-assist-btn" onclick="aiAssistDescription()" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-secondary hover:text-primary transition-colors bg-secondary/5 hover:bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                AI Assist: Polish My Idea
+                            </button>
+                        </div>
+                        <div class="mt-1 relative">
+                            <textarea id="description" name="description" rows="5" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Tell us how we can make Birnagar better..."></textarea>
+                            <!-- AI Loading Spinner -->
+                            <div id="ai-loading" class="hidden absolute inset-0 bg-white/80 flex items-center justify-center rounded-md z-10">
+                                <div class="flex flex-col items-center">
+                                    <svg class="animate-spin h-6 w-6 text-secondary mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Birni AI is thinking...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-[10px] text-gray-400">Write a brief idea and click "AI Assist" to make it more persuasive and professional.</p>
                     </div>
                     
                     <div class="sm:col-span-2">
@@ -145,6 +161,53 @@
                 </div>
                 
                 <script>
+                    async function aiAssistDescription() {
+                        const descTextarea = document.getElementById('description');
+                        const categorySelect = document.getElementById('suggestion_category');
+                        const loadingOverlay = document.getElementById('ai-loading');
+                        const assistBtn = document.getElementById('ai-assist-btn');
+
+                        const currentText = descTextarea.value.trim();
+                        
+                        if (!currentText) {
+                            alert("Please write a short idea first so the AI can help you polish it.");
+                            return;
+                        }
+
+                        // Show loading state
+                        loadingOverlay.classList.remove('hidden');
+                        assistBtn.disabled = true;
+
+                        try {
+                            const response = await fetch("{% url 'ai_assist_description' %}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({
+                                    description: currentText,
+                                    category: categorySelect.value,
+                                    sub_category: 'Suggestion Improvement',
+                                    type: 'suggestion'
+                                })
+                            });
+
+                            const data = await response.json();
+                            if (data.description) {
+                                descTextarea.value = data.description;
+                            } else if (data.error) {
+                                alert(data.error);
+                            }
+                        } catch (error) {
+                            console.error('AI Assist Error:', error);
+                            alert("Sorry, there was an error connecting to the AI Assistant.");
+                        } finally {
+                            loadingOverlay.classList.add('hidden');
+                            assistBtn.disabled = false;
+                        }
+                    }
+
                     function toggleDescriptionField() {
                         const categorySelect = document.getElementById('suggestion_category');
                         const descAsterisk = document.getElementById('desc_asterisk');

@@ -121,3 +121,38 @@ def _call_google_direct(user_query, chat_history):
     except Exception as e:
         logger.error(f"Google Direct Error: {str(e)}")
         return "I'm having a little trouble connecting right now. Please try again in a moment."
+
+
+def get_gemini_response(prompt):
+    """
+    Generic function to get a response from Gemini for a specific prompt.
+    Does not use the chatbot system context.
+    """
+    # Try Bytez Primary
+    if BYTEZ_API_KEY and len(BYTEZ_API_KEY) > 10:
+        url = f"https://api.bytez.com/models/v2/google/{BYTEZ_MODEL}"
+        headers = {
+            "Authorization": f"Key {BYTEZ_API_KEY}",
+            "provider-key": GEMINI_API_KEY,
+            "Content-Type": "application/json"
+        }
+        try:
+            res = requests.post(url, json={"messages": [{"role": "user", "content": prompt}], "stream": False}, headers=headers, timeout=15)
+            if res.status_code == 200:
+                data = res.json()
+                return data.get('output') or data.get('choices', [{}])[0].get('message', {}).get('content')
+        except Exception as e:
+            logger.error(f"Generic Bytez Error: {str(e)}")
+
+    # Try Google Fallback
+    if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{GOOGLE_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        try:
+            res = requests.post(url, json={"contents": [{"role": "user", "parts": [{"text": prompt}]}]}, headers={"Content-Type": "application/json"}, timeout=15)
+            if res.status_code == 200:
+                data = res.json()
+                return data['candidates'][0]['content']['parts'][0]['text']
+        except Exception as e:
+            logger.error(f"Generic Google Error: {str(e)}")
+
+    return None

@@ -25,7 +25,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -43,6 +43,7 @@ from .utils import (
     store_otp_in_session,
     verify_otp_value,
     is_otp_expired,
+    get_otp_resend_delay_remaining,
     clear_otp_session,
     OTP_SESSION_KEY,
     OTP_DATA_KEY,
@@ -63,10 +64,12 @@ from .utils import (
 from .services import ComplaintService
 from .serializers import ComplaintSerializer, SuggestionSerializer, UserSerializer
 from .image_processor import ImageProcessor
+from core.services.chatbot_service import get_chatbot_response, get_gemini_response
 
 import os
 from datetime import timedelta
 from django.http import FileResponse, Http404
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -307,7 +310,7 @@ def citizen_register(request):
         otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, otp)
 
-        email_sent = send_otp_email(email, otp)
+        email_sent = send_otp_email(email, otp, purpose='Registration')
         if email_sent:
             messages.success(request, f"A 6-digit OTP has been sent to your email: {email}.")
         else:
@@ -329,12 +332,17 @@ def verify_otp(request):
 
     # Handle Resend OTP
     if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('verify_otp')
+
         email = request.session[OTP_DATA_KEY]['email']
         new_otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, new_otp)
         # Reset attempt counter on resend
         request.session.pop('otp_attempts', None)
-        email_sent = send_otp_email(email, new_otp)
+        email_sent = send_otp_email(email, new_otp, purpose='Registration')
         if email_sent:
             messages.success(request, f"A new OTP has been sent to your email: {email}.")
         else:
@@ -465,7 +473,7 @@ def forgot_password(request):
         otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, otp)
         
-        email_sent = send_otp_email(email, otp)
+        email_sent = send_otp_email(email, otp, purpose='Password Reset')
         if email_sent:
             messages.success(request, f"A reset OTP has been sent to your email: {email}.")
         else:
@@ -484,6 +492,22 @@ def forgot_password_verify_otp(request):
         messages.error(request, "Session expired. Please try again.")
         return redirect('forgot_password')
         
+    # Handle Resend OTP
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('forgot_password_verify_otp')
+
+        email = request.session[FORGOT_PW_DATA_KEY]['email']
+        new_otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, new_otp)
+        if send_otp_email(email, new_otp, purpose='Password Reset'):
+            messages.success(request, f"A new reset OTP has been sent to your email: {email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+        return redirect('forgot_password_verify_otp')
+
     if request.method == 'POST':
         if is_otp_expired(request):
             clear_otp_session(request)
@@ -572,7 +596,7 @@ def admin_forgot_password(request):
         otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, otp)
         
-        if send_otp_email(email, otp):
+        if send_otp_email(email, otp, purpose='Admin Password Reset'):
             messages.success(request, f"A reset OTP has been sent to your email: {email}.")
             return redirect('admin_forgot_password_verify_otp')
         else:
@@ -589,6 +613,22 @@ def admin_forgot_password_verify_otp(request):
         messages.error(request, "Session expired. Please try again.")
         return redirect('admin_forgot_password')
         
+    # Handle Resend OTP
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('admin_forgot_password_verify_otp')
+
+        email = request.session[ADMIN_FORGOT_PW_DATA_KEY]['email']
+        new_otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, new_otp)
+        if send_otp_email(email, new_otp, purpose='Admin Password Reset'):
+            messages.success(request, f"A new reset OTP has been sent to your email: {email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+        return redirect('admin_forgot_password_verify_otp')
+
     if request.method == 'POST':
         if is_otp_expired(request):
             clear_otp_session(request)
@@ -636,9 +676,10 @@ def admin_forgot_password_reset(request):
         user.set_password(password)
         user.save()
         
-        # Cleanup
+        # Cleanup — clear OTP, session flag, and the stored admin forgot-pw data
         clear_otp_session(request)
         request.session.pop('admin_forgot_password_verified', None)
+        request.session.pop(ADMIN_FORGOT_PW_DATA_KEY, None)
         
         messages.success(request, "Admin password reset successful! Please login.")
         return redirect('admin_login')
@@ -685,7 +726,7 @@ def admin_register(request):
         otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, otp)
         
-        email_sent = send_otp_email(email, otp)
+        email_sent = send_otp_email(email, otp, purpose='Admin Registration')
         if email_sent:
             messages.success(request, f"An OTP has been sent to your email: {email}.")
             return redirect('verify_admin_otp')
@@ -706,10 +747,15 @@ def verify_admin_otp(request):
 
     # Handle Resend OTP
     if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('verify_admin_otp')
+
         email = request.session[ADMIN_REG_DATA_KEY]['email']
         new_otp = str(random.randint(100000, 999999))
         store_otp_in_session(request, new_otp)
-        email_sent = send_otp_email(email, new_otp)
+        email_sent = send_otp_email(email, new_otp, purpose='Admin Registration')
         if email_sent:
             messages.success(request, f"A new OTP has been sent to your email: {email}.")
         else:
@@ -890,7 +936,7 @@ def profile_edit(request):
             otp = str(random.randint(100000, 999999))
             store_otp_in_session(request, otp)
             
-            email_sent = send_otp_email(new_email, otp)
+            email_sent = send_otp_email(new_email, otp, purpose='Email Verification')
             if email_sent:
                 messages.info(request, f"A verification OTP has been sent to your new email: {new_email}.")
                 email_changed = True
@@ -936,6 +982,21 @@ def verify_email_update(request):
         messages.error(request, "Session expired or invalid. Please try editing your profile again.")
         return redirect('profile_edit')
         
+    # Handle Resend OTP
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('verify_email_update')
+
+        new_otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, new_otp)
+        if send_otp_email(new_email, new_otp, purpose='Email Verification'):
+            messages.success(request, f"A new verification OTP has been sent to your email: {new_email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+        return redirect('verify_email_update')
+
     if request.method == 'POST':
         if is_otp_expired(request):
             clear_otp_session(request)
@@ -994,7 +1055,7 @@ def admin_profile_edit(request):
             otp = str(random.randint(100000, 999999))
             store_otp_in_session(request, otp)
             
-            email_sent = send_otp_email(new_email, otp)
+            email_sent = send_otp_email(new_email, otp, purpose='Email Verification')
             if email_sent:
                 messages.info(request, f"A verification OTP has been sent to your new email: {new_email}.")
                 email_changed = True
@@ -1021,6 +1082,21 @@ def admin_verify_email_update(request):
         messages.error(request, "Session expired. Please try editing your profile again.")
         return redirect('admin_profile_edit')
         
+    # Handle Resend OTP
+    if request.method == 'POST' and request.POST.get('action') == 'resend':
+        remaining = get_otp_resend_delay_remaining(request)
+        if remaining > 0:
+            messages.error(request, f"Please wait {remaining} seconds before requesting a new OTP.")
+            return redirect('admin_verify_email_update')
+
+        new_otp = str(random.randint(100000, 999999))
+        store_otp_in_session(request, new_otp)
+        if send_otp_email(new_email, new_otp, purpose='Email Verification'):
+            messages.success(request, f"A new verification OTP has been sent to your email: {new_email}.")
+        else:
+            messages.error(request, "Email service unavailable. Please try again.")
+        return redirect('admin_verify_email_update')
+
     if request.method == 'POST':
         if is_otp_expired(request):
             clear_otp_session(request)
@@ -1034,8 +1110,9 @@ def admin_verify_email_update(request):
             user.email = new_email
             user.save()
             
-            # Clean up
+            # Clean up — remove OTP and the pending email from session
             clear_otp_session(request)
+            request.session.pop(ADMIN_PENDING_EMAIL_KEY, None)
             
             messages.success(request, f"Admin email updated successfully to {new_email}!")
             return redirect('admin_dashboard')
@@ -1172,6 +1249,53 @@ def check_duplicate(request):
         }), content_type='application/json')
         
     return HttpResponse('{"duplicate": false}', content_type='application/json')
+
+
+@login_required
+def ai_assist_description(request):
+    """
+    AJAX endpoint that uses Google Gemini to help the citizen 
+    write a professional and detailed description based on their 
+    short input and selected category.
+    """
+    if request.method != 'POST':
+        return HttpResponse('Method not allowed', status=405)
+    
+    try:
+        data = json.loads(request.body)
+        user_input = data.get('description', '').strip()
+        category   = data.get('category', '').strip()
+        sub_category = data.get('sub_category', '').strip()
+        mode       = data.get('type', 'complaint').lower() # 'complaint' or 'suggestion'
+    except Exception:
+        return HttpResponse('Invalid data', status=400)
+
+    if not user_input:
+        return HttpResponse(json.dumps({'error': 'Please provide a brief description first.'}), content_type='application/json')
+
+    # Prepare prompt for Gemini
+    role_description = "A citizen is submitting a complaint" if mode == "complaint" else "A citizen is submitting an improvement suggestion"
+    
+    prompt = f"""
+    You are an AI assistant for the Birnagar Municipality. 
+    {role_description} in the category "{category}" (Sub-category/Context: {sub_category}).
+    Their brief input is: "{user_input}"
+    
+    Please rewrite this into a professional, clear, and detailed text that municipal workers and city planners can easily understand.
+    - If it's a complaint: Focus on being factual, specific, and highlighting the problem.
+    - If it's a suggestion: Focus on being constructive, visionary, and explaining the benefits to the community.
+    
+    Keep it concise but much more professional than the original input. 
+    Do NOT add placeholders like [Name] or [Date].
+    ONLY return the rewritten text. No other commentary.
+    """
+
+    ai_response = get_gemini_response(prompt)
+
+    if ai_response:
+        return HttpResponse(json.dumps({'description': ai_response}), content_type='application/json')
+    else:
+        return HttpResponse(json.dumps({'error': 'AI Assistant is temporarily unavailable. Please try writing manually.'}), content_type='application/json')
 
 
 # ==============================================================================
@@ -1489,12 +1613,21 @@ def admin_suggestions(request):
         return error_403(request)
 
     if request.method == 'POST':
-        suggestion        = get_object_or_404(Suggestion, id=request.POST.get('suggestion_id'))
-        suggestion.status = request.POST.get('new_status')
+        suggestion = get_object_or_404(Suggestion, id=request.POST.get('suggestion_id'))
+        new_status = request.POST.get('new_status')
+
+        # Validate that new_status is a legitimate choice — prevent arbitrary string injection
+        valid_statuses = [s[0] for s in Suggestion.Status.choices]
+        if new_status not in valid_statuses:
+            messages.error(request, "Invalid status value.")
+            return redirect('admin_suggestions')
+
+        suggestion.status = new_status
         suggestion.save()
-        messages.success(request, f"Suggestion {suggestion.ticket_number} updated to {suggestion.status}.")
-        
-        # Capture current filters for persistent redirect
+        messages.success(request, f"Suggestion {suggestion.ticket_number} updated to {suggestion.get_status_display()}.")
+
+        # Invalidate analytics cache so the next load reflects fresh data
+        invalidate_analytics_cache()
         query_params = {}
         for param in ['ward', 'status', 'category', 'q', 'page']:
             val = request.POST.get(param)
@@ -1827,6 +1960,8 @@ def appeal_complaint(request, complaint_id):
         return redirect('citizen_tracking')
 
     return redirect('citizen_tracking')
+
+
 @login_required
 def print_work_order(request, complaint_id):
     if request.user.role != User.Role.ADMIN:
@@ -1843,7 +1978,6 @@ def print_suggestion(request, suggestion_id):
     suggestion = get_object_or_404(Suggestion, id=suggestion_id)
     return render(request, 'print_suggestion.html', {'suggestion': suggestion})
 
-from django.http import JsonResponse
 
 @login_required
 def mark_notifications_read(request):
@@ -1857,8 +1991,6 @@ def mark_notifications_read(request):
 # ==============================================================================
 # 9. AI CHATBOT ASSISTANT
 # ==============================================================================
-
-from core.services.chatbot_service import get_chatbot_response
 
 def chatbot_query(request):
     """

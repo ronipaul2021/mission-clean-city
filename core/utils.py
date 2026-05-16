@@ -172,9 +172,26 @@ def is_otp_expired(request) -> bool:
     return (time.time() - created_at) > expiry_seconds
 
 
+def get_otp_resend_delay_remaining(request) -> int:
+    """
+    Returns the number of seconds remaining before a new OTP can be sent.
+    Returns 0 if the delay has already passed.
+    """
+    last_sent = request.session.get(OTP_TIMESTAMP_KEY, 0)
+    delay_seconds = getattr(settings, 'OTP_RESEND_DELAY_SECONDS', 60)
+    elapsed = time.time() - last_sent
+    remaining = int(delay_seconds - elapsed)
+    return max(0, remaining)
+
+
 def clear_otp_session(request) -> None:
     """Remove OTP, timestamp, and registration data from the session."""
-    for key in (OTP_SESSION_KEY, OTP_TIMESTAMP_KEY, OTP_DATA_KEY, ADMIN_REG_DATA_KEY, ADMIN_FORGOT_PW_DATA_KEY, ADMIN_PENDING_EMAIL_KEY):
+    keys_to_clear = (
+        OTP_SESSION_KEY, OTP_TIMESTAMP_KEY, OTP_DATA_KEY, 
+        FORGOT_PW_DATA_KEY, PENDING_EMAIL_KEY,
+        ADMIN_REG_DATA_KEY, ADMIN_FORGOT_PW_DATA_KEY, ADMIN_PENDING_EMAIL_KEY
+    )
+    for key in keys_to_clear:
         request.session.pop(key, None)
 
 
@@ -591,13 +608,7 @@ def auto_crop_face(image_file):
     Uses OpenCV Haar Cascades to detect a face, crop a perfect 1:1 square centered
     on the face, then passes to validate_and_compress_image.
     Falls back to center-crop if no face is detected or OpenCV is unavailable.
-    Includes a safety guard: if processing exceeds 30 seconds it falls back gracefully.
     """
-    import signal
-
-    def _timeout_handler(signum, frame):
-        raise TimeoutError("Face detection timed out.")
-
     try:
         import cv2
         import numpy as np

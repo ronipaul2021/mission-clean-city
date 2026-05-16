@@ -209,6 +209,9 @@ AADHAAR_ENCRYPTION_KEY_OLD = config('AADHAAR_ENCRYPTION_KEY_OLD', default='')
 # OTP validity window in minutes
 OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=10, cast=int)
 
+# OTP resend delay in seconds
+OTP_RESEND_DELAY_SECONDS = config('OTP_RESEND_DELAY_SECONDS', default=60, cast=int)
+
 # AI Assistant
 BYTEZ_API_KEY = config('BYTEZ_API_KEY', default='')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')

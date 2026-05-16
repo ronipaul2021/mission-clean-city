@@ -37,6 +37,7 @@ urlpatterns = [
     # 2. Submit problem
     path('submit-problem/', views.submit_problem, name='submit_problem'),
     path('submit-problem/check-duplicate/', views.check_duplicate, name='check_duplicate'),
+    path('submit-problem/ai-assist/', views.ai_assist_description, name='ai_assist_description'),
 
     # 3. Dashboards & tracking
     path('track/', views.citizen_tracking, name='citizen_tracking'),

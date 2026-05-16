@@ -146,10 +146,24 @@
                 </div>
 
                 <div id="description-container" class="hidden">
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description / Problem Statement *</label>
-                    <div class="mt-1">
-                        <textarea id="description" name="description" rows="4" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Please describe the issue in detail..."></textarea>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description / Problem Statement *</label>
+                        <button type="button" id="ai-assist-btn" onclick="aiAssistDescription()" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-secondary hover:text-primary transition-colors bg-secondary/5 hover:bg-secondary/10 px-2 py-1 rounded-md border border-secondary/20">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            AI Assist: Polish My Writing
+                        </button>
                     </div>
+                    <div class="mt-1 relative">
+                        <textarea id="description" name="description" rows="4" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Please describe the issue in detail..."></textarea>
+                        <!-- AI Loading Spinner -->
+                        <div id="ai-loading" class="hidden absolute inset-0 bg-white/80 flex items-center justify-center rounded-md z-10">
+                            <div class="flex flex-col items-center">
+                                <svg class="animate-spin h-6 w-6 text-secondary mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Birni AI is writing...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-[10px] text-gray-400">Write a short note and click "AI Assist" to make it more detailed and professional.</p>
                 </div>
 
                 <!-- Map Location -->
@@ -241,18 +255,65 @@
             subCatContainer.classList.add('hidden');
         }
 
-        // Handle 'Other' Description visibility
-        if (category === 'OTHER') {
+        // Handle Description visibility
+        if (category) {
             descContainer.classList.remove('hidden');
-            descTextarea.required = true;
+            // Required for 'OTHER', optional for others
+            descTextarea.required = (category === 'OTHER');
         } else {
             descContainer.classList.add('hidden');
             descTextarea.required = false;
-            descTextarea.value = ''; // clear if changing
         }
 
         // Check for duplicates
         checkDuplicate(category);
+    }
+
+    async function aiAssistDescription() {
+        const descTextarea = document.getElementById('description');
+        const categorySelect = document.getElementById('category');
+        const subCategorySelect = document.getElementById('sub_category');
+        const loadingOverlay = document.getElementById('ai-loading');
+        const assistBtn = document.getElementById('ai-assist-btn');
+
+        const currentText = descTextarea.value.trim();
+        
+        if (!currentText) {
+            alert("Please write a short description first so the AI can help you polish it.");
+            return;
+        }
+
+        // Show loading state
+        loadingOverlay.classList.remove('hidden');
+        assistBtn.disabled = true;
+
+        try {
+            const response = await fetch("{% url 'ai_assist_description' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    description: currentText,
+                    category: categorySelect.value,
+                    sub_category: subCategorySelect.value
+                })
+            });
+
+            const data = await response.json();
+            if (data.description) {
+                descTextarea.value = data.description;
+            } else if (data.error) {
+                alert(data.error);
+            }
+        } catch (error) {
+            console.error('AI Assist Error:', error);
+            alert("Sorry, there was an error connecting to the AI Assistant.");
+        } finally {
+            loadingOverlay.classList.add('hidden');
+            assistBtn.disabled = false;
+        }
     }
 
     async function checkDuplicate(category) {
