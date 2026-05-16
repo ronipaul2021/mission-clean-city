@@ -1,3 +1,39 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap');
+
+body {
+    font-family: 'EB Garamond', serif;
+    font-size: 14pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+}
+
+h1, h2, h3 {
+    font-family: 'EB Garamond', serif;
+    font-weight: 800;
+    color: #000;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+img {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 15px 0;
+    max-width: 100%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+blockquote {
+    font-style: italic;
+    color: #555;
+    border-left: 4px solid #ccc;
+    padding-left: 15px;
+    margin: 20px 0;
+}
+</style>
+
 # URBAN CITY CLEAN (MISSION CLEAN CITY)
 ## Smart Digital Cleanliness Monitoring System for Smart Bengal
 *Strategic Project Proposal & Scalability Roadmap*
@@ -15,9 +51,14 @@
 *   **Dirty roads**
 *   **Drainage blockage**
 *   **Unclean public areas**
-*   **Overflowing dustbins / Improper waste disposal**
-*   **Streetlight issues & Waterlogging**
-*   **Illegal dumping & Lack of sanitation facilities**
+*   **Overflowing dustbins**
+*   **Improper waste disposal**
+*   **Streetlight issues**
+*   **Waterlogging**
+*   **Illegal dumping**
+*   **Lack of sanitation facilities**
+*   **Public health concerns related to cleanliness**
+*   **Other cleanliness-related issues**
 
 Through a user-friendly website or mobile platform, citizens can easily upload images and use live location tracking to report problems. These complaints are instantly sent to municipal authorities for faster action and monitoring. 
 
@@ -31,11 +72,11 @@ Through a user-friendly website or mobile platform, citizens can easily upload i
 *   **Faster Complaint Management:** Transition from paper-based and fragmented complaint systems to a unified digital portal.
 *   **Increase Citizen Participation:** Make reporting issues as simple as taking a photo.
 *   **Reduce Manual Workload:** Equip administrators with automated dashboards and AI to handle data easily.
-*   **Support Smart Bengal:** Directly supports **Smart Bengal & Smart City initiatives** by digitizing municipal governance.
+*   **Support Smart Bengal:** Align with state-wide Smart City and digital governance initiatives.
 
 ---
 
-## 3. How the System Works (Workflow Example)
+## 3. How the System Works
 The platform ensures a seamless flow of information between the public and the cleaning staff. Below is the step-by-step visual workflow of the system in action.
 
 ### 3.1 Citizen Side Workflow
@@ -81,40 +122,47 @@ The system successfully bridges the communication gap through a dual-ecosystem t
 *   **Area-Wise Cleanliness Tracking:** Identifies infrastructure "hotspots" requiring urgent attention.
 *   **Hardened Identity Protection:** Administrative identities (Employee ID and Full Name) are locked to prevent internal impersonation. Admins manage profiles via OTP-verified secure workflows.
 
+### 4.3 AI Civic Assistant (Birni AI)
+*   **24/7 Chatbot:** Integrated AI assistant (powered by Google Gemini) capable of answering FAQs and guiding users on municipal policies.
+
 ---
 
 ## 5. Technical Architecture & Security Framework
 *For Technical Review Members:*
 The platform is built on modern, secure, and scalable technologies capable of handling state-wide traffic.
 *   **Backend Framework:** Python / Django (Highly secure and scalable, capable of supporting multi-tenant databases).
-*   **AI Integration:** Google Gemini NLP models for the "Birni AI" assistant.
+*   **AI Integration:** Google Gemini NLP models.
 *   **Hardened Authentication:** Multi-factor authentication (MFA) via OTP for all critical account modifications.
 *   **Identity Protection:** Sensitive citizen data (such as Aadhaar numbers) is encrypted at rest using Advanced Symmetric Encryption (Fernet).
 *   **Automated Credential Dispatch:** Credentials for administrative staff are dispatched via encrypted official email, ensuring strict Role-Based Access Control (RBAC).
 
+### 5.1 Key Security & Administrative Workflows
+*   **Admin Identity Hardening:** Every Administrator is assigned a unique `Employee ID` at registration. This ID and their `Full Name` are locked at the database level and cannot be modified by the user, preventing internal identity fraud.
+*   **Secure Email Modification:** Any change to an administrative email address requires mandatory 6-digit OTP verification sent to the *new* email address before the change is committed.
+*   **Isolated Password Recovery:** The system maintains separate, cryptographically secure recovery pipelines for Citizens and Administrators to prevent cross-account attacks.
+
 ---
 
 ## 6. Benefits of the Project
-*   **Faster response** to public complaints through real-time digital routing.
+*   **Faster response** to public complaints.
 *   **Cleaner urban environment** and healthier communities.
 *   **Transparent monitoring system** that builds confidence in local government.
 *   **Better communication** between citizens and municipality staff.
 *   **Optimized Budgeting:** Analytics allow municipalities to deploy funds exactly where infrastructure is failing.
-*   **Digital Governance:** Supports the modernization of government services across West Bengal.
 
 ---
 
 ## 7. Future Scope & Scalability
 The architecture of the prototype was engineered to facilitate rapid expansion to build a massive state-wide infrastructure.
-*   **State-Wide Monitoring System (SaaS Model):** A single platform capable of hosting multiple municipalities simultaneously with complete data isolation for each.
-*   **Mobile Application:** Transitioning from a web portal to dedicated, native **Android and iOS applications**.
+*   **State-Wide Monitoring System (SaaS Model):** A single platform capable of hosting multiple municipalities simultaneously (e.g., Ranaghat, Krishnanagar) with complete data isolation for each.
+*   **Mobile Application:** Transitioning from a web portal to dedicated, native **Android and iOS applications** with offline-mode capabilities.
 *   **IoT Smart Dustbin Integration:** Future compatibility to connect with physical smart bins that automatically alert the municipality when full.
-*   **Advanced Admin Workstations:** Strictly optimized for Laptop/Desktop environments to efficiently manage GIS mapping and large datasets.
+*   **Advanced Admin Workstations:** The Admin portal will remain strictly optimized for Laptop/Desktop environments to efficiently manage GIS mapping and large datasets.
 
 ---
 
 ## 8. Conclusion
-**Urban City Clean** (Mission Clean City) is a modern technology-based initiative aimed at building a cleaner, smarter, and healthier West Bengal. This platform can help municipalities improve waste management efficiency while encouraging active citizen participation in maintaining city cleanliness. By transitioning this prototype into a Multi-Municipality platform, the Urban Development Department has the opportunity to establish a new gold standard for proactive, data-driven, and highly accountable civic administration.
+**Urban City Clean** (Mission Clean City) is a modern technology-based initiative aimed at building a cleaner, smarter, and healthier West Bengal. This platform can help municipalities improve waste management efficiency while encouraging active citizen participation in maintaining city cleanliness. By transitioning this prototype into a Multi-Municipality platform, the Urban Development Department has the opportunity to establish a new gold standard for proactive civic administration.
 
 ---
 **Developed By:**  
