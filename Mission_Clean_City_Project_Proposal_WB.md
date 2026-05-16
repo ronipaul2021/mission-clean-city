@@ -45,23 +45,29 @@ The platform ensures a seamless flow of information between the public and the c
 
 ### 3.1 Citizen Side Workflow
 1.  **Secure Login:** Citizens access their accounts using their registered mobile number and password.
-    ![Citizen Login](./screenshots/citizen_login.png)
+    ![Citizen Login](./screenshots/c-login.png)
 
 2.  **Tracking Dashboard:** After login, citizens can see the live status of all their reported issues.
-    ![Citizen Dashboard](./screenshots/citizen_dashboard.png)
+    ![Citizen Dashboard](./screenshots/c-after-login.png)
 
 3.  **Reporting an Issue:** A simple form allows citizens to upload photos and descriptions, with GPS location captured automatically.
-    ![Report Issue Form](./screenshots/citizen_report_issue.png)
+    ![Report Issue Form](./screenshots/c-report.png)
 
 4.  **Providing Suggestions:** Citizens can participate in city planning by submitting suggestions for cleanliness improvements.
-    ![Submit Suggestion Form](./screenshots/citizen_suggestion.png)
+    ![Submit Suggestion Form](./screenshots/c-sugg-submit.png)
 
 ### 3.2 Administrative Side Workflow
 1.  **Admin Portal Login:** Municipal staff use their hardened, non-editable Employee IDs to log in.
-    ![Admin Login](./screenshots/admin_login.png)
+    ![Admin Login](./screenshots/a-login.png)
 
-2.  **Command Center Dashboard:** The main dashboard provides a bird's-eye view of all municipal operations, ward-wise analytics, and complaint tracking.
-    ![Admin Dashboard](./screenshots/admin_dashboard.png)
+2.  **Command Center Dashboard & Analytics:** The main dashboard provides real-time KPIs and ward-wise analytics.
+    ![Admin Dashboard](./screenshots/a-analytics.png)
+
+3.  **Managing Public Issues:** Admins can review, assign, and resolve reported issues from the command center.
+    ![Admin Issue Management](./screenshots/a-dash-c-issue.png)
+
+4.  **Reviewing Citizen Suggestions:** A dedicated section for administrators to evaluate community-driven ideas.
+    ![Admin Suggestion Review](./screenshots/a-c-sugg.png)
 
 ---
 
