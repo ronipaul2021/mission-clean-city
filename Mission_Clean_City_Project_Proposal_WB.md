@@ -43,6 +43,10 @@ h3, h4 {
     page-break-before: always;
 }
 
+.full-width-img {
+    max-width: 100% !important;
+}
+
 img {
     display: block;
     margin: 20px auto;
@@ -127,12 +131,12 @@ The platform ensures a seamless flow of information between the public and the c
 <div class="page-break"></div>
 
 2.  **Command Center Dashboard & Analytics:** The main dashboard provides real-time KPIs and ward-wise analytics.
-    ![Admin Dashboard](./screenshots/a-analytics.png)
+    <img src="./screenshots/a-analytics.png" class="full-width-img" alt="Admin Dashboard">
 
 <div class="page-break"></div>
 
 3.  **Managing Public Issues:** Admins can review, assign, and resolve reported issues from the command center.
-    ![Admin Issue Management](./screenshots/a-dash-c-issue.png)
+    <img src="./screenshots/a-dash-c-issue.png" class="full-width-img" alt="Admin Issue Management">
 
 <div class="page-break"></div>
 
