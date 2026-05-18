@@ -26,6 +26,16 @@
         <!-- Premium Repeating Leaf Pattern Overlay -->
         <div class="leaf-pattern-bg"></div>
         
+        <!-- Premium Animated Tricolor Flag Waves -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1440 800" preserveAspectRatio="none" style="filter: drop-shadow(0 0 20px rgba(0,0,0,0.15)); z-index: 1;">
+            <!-- Saffron Wave -->
+            <path class="flag-band flag-saffron" d="M 1440,0 C 1400,200 1350,450 1150,600 C 950,750 600,780 0,800 L 0,760 C 580,740 920,710 1100,570 C 1280,430 1320,180 1360,0 Z" fill="#FF9933" opacity="0.75" />
+            <!-- White Wave -->
+            <path class="flag-band flag-white" d="M 1360,0 C 1320,180 1280,430 1100,570 C 920,710 580,740 0,760 L 0,720 C 560,700 890,670 1050,540 C 1210,410 1250,160 1280,0 Z" fill="#FFFFFF" opacity="0.85" />
+            <!-- Green Wave -->
+            <path class="flag-band flag-green" d="M 1280,0 C 1250,160 1210,410 1050,540 C 890,670 560,700 0,720 L 0,680 C 540,660 860,630 1000,510 C 1140,390 1180,140 1200,0 Z" fill="#138808" opacity="0.75" />
+        </svg>
+        
         <!-- Digital Technical Grid overlay -->
         <div
             style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;mix-blend-mode:screen;">
@@ -322,6 +332,40 @@
         background-size: auto;
         opacity: 0.045;
         mix-blend-mode: overlay;
+    }
+
+    /* Premium Tricolor Animated Flag Ribbon */
+    @keyframes flagWave {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+        }
+        50% {
+            transform: translate(-10px, 8px) scale(1.02);
+        }
+    }
+
+    .flag-band {
+        transform-origin: top right;
+        transition: all 0.8s ease-in-out;
+    }
+
+    .flag-saffron {
+        animation: flagWave 9s ease-in-out infinite;
+    }
+
+    .flag-white {
+        animation: flagWave 9s ease-in-out infinite 1.8s;
+    }
+
+    .flag-green {
+        animation: flagWave 9s ease-in-out infinite 3.6s;
+    }
+
+    /* Smooth responsiveness for mobile viewports */
+    @media (max-width: 768px) {
+        .flag-band {
+            opacity: 0.5; /* Slightly fade on mobile to maintain high contrast with text */
+        }
     }
 </style>
 
