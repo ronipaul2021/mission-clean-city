@@ -66,4 +66,8 @@ urlpatterns = [
     path('mark-notifications-read/', views.mark_notifications_read, name='mark_notifications_read'),
     # 9. AI Chatbot
     path('chatbot-query/', views.chatbot_query, name='chatbot_query'),
+
+    # Catch-all — must be last. Renders the branded 404 page for any
+    # unrecognised URL, even when DEBUG=True (where handler404 is ignored).
+    path('<path:url>', views.error_404, name='page_not_found'),
 ]

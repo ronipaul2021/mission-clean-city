@@ -7,81 +7,143 @@
 <!-- ═══════════════════════════════════════════════════════
      HERO SECTION
 ════════════════════════════════════════════════════════════ -->
-<section class="relative overflow-hidden bg-primary-dark" style="min-height:92vh;">
-    <!-- Animated background blobs -->
+<section class="relative overflow-hidden" style="min-height:92vh; background: radial-gradient(circle at 50% 50%, #001b45 0%, #000c24 100%);">
+    <!-- Animated background blobs & Leaf/Grid Patterns -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div style="position:absolute;top:-10%;left:-10%;width:55%;height:55%;background:radial-gradient(circle,rgba(255,215,0,0.12) 0%,transparent 70%);border-radius:50%;animation:pulse 8s ease-in-out infinite;"></div>
-        <div style="position:absolute;bottom:-15%;right:-10%;width:60%;height:60%;background:radial-gradient(circle,rgba(0,75,135,0.35) 0%,transparent 70%);border-radius:50%;animation:pulse 10s ease-in-out infinite 2s;"></div>
-        <div style="position:absolute;top:30%;right:25%;width:300px;height:300px;background:radial-gradient(circle,rgba(255,215,0,0.07) 0%,transparent 70%);border-radius:50%;animation:pulse 12s ease-in-out infinite 4s;"></div>
-        <!-- Grid overlay -->
-        <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:40px 40px;"></div>
+        <!-- Radial Glow 1 (Warm Sunset Orange highlight) -->
+        <div
+            style="position:absolute;top:-10%;left:-10%;width:55%;height:55%;background:radial-gradient(circle,rgba(199,80,0,0.12) 0%,transparent 70%);border-radius:50%;animation:pulse 8s ease-in-out infinite;">
+        </div>
+        <!-- Radial Glow 2 (Premium Blue/Navy glow) -->
+        <div
+            style="position:absolute;bottom:-15%;right:-10%;width:60%;height:60%;background:radial-gradient(circle,rgba(0,102,204,0.4) 0%,transparent 70%);border-radius:50%;animation:pulse 10s ease-in-out infinite 2s;">
+        </div>
+        <!-- Radial Glow 3 (Soft ambient center) -->
+        <div
+            style="position:absolute;top:30%;right:25%;width:300px;height:300px;background:radial-gradient(circle,rgba(0,74,173,0.15) 0%,transparent 70%);border-radius:50%;animation:pulse 12s ease-in-out infinite 4s;">
+        </div>
+        
+        <!-- Premium Repeating Leaf Pattern Overlay -->
+        <div class="leaf-pattern-bg"></div>
+        
+        <!-- Digital Technical Grid overlay -->
+        <div
+            style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;mix-blend-mode:screen;">
+        </div>
     </div>
 
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12" style="padding-top:7rem;padding-bottom:6rem;">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-12"
+        style="padding-top:7rem;padding-bottom:6rem;">
 
         <!-- Left: Text -->
         <div class="flex-1 text-center lg:text-left">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6" style="background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.25);">
-                <span style="width:6px;height:6px;background:#FFD700;border-radius:50%;display:inline-block;animation:pulse 2s infinite;"></span>
-                Birnagar Municipality — West Bengal
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+                style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);">
+                <span
+                    style="width:6px;height:6px;background:#FF9933;border-radius:50%;display:inline-block;animation:pulse 2s infinite;"></span>
+                <span
+                    style="background:linear-gradient(to right,#FF9933,#FFFFFF,#138808);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline-block;">Birnagar
+                    Municipality — West Bengal</span>
             </div>
-            <h1 class="font-black text-white leading-tight" style="font-size:clamp(2.5rem,5vw,4rem);letter-spacing:-1px;">
+            <h1 class="font-black text-white leading-tight"
+                style="font-size:clamp(2.5rem,5vw,4rem);letter-spacing:-1px;">
                 Mission Clean City<br>
-                <span style="background:linear-gradient(135deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Birnagar No. 1</span>
+                <span
+                    style="background:linear-gradient(to right,#FF9933,#FFFFFF,#138808);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Birnagar
+                    No. 1</span>
             </h1>
             <p class="mt-6 text-lg text-blue-200 max-w-xl mx-auto lg:mx-0" style="line-height:1.8;">
-                Your voice matters. Report civic issues, track progress, and help build a cleaner, greener Birnagar — all in one place.
+                Your voice matters. Report civic issues, track progress, and help build a cleaner, greener Birnagar —
+                all in one place.
             </p>
 
             <!-- CTA Buttons -->
             <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 {% if user.is_authenticated and user.role == 'CITIZEN' %}
-                <a href="{% url 'submit_problem' %}" class="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-primary-dark shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style="background:linear-gradient(135deg,#FFD700,#FFA500);font-size:1rem;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M12 3C6.48 3 2 7.48 2 12s4.48 9 10 9 10-4.48 10-9S17.52 3 12 3z"/></svg>
+                <a href="{% url 'submit_problem' %}"
+                    class="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    style="background:linear-gradient(135deg,#C75000,#992C2C);font-size:1rem;">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M12 9v2m0 4h.01M12 3C6.48 3 2 7.48 2 12s4.48 9 10 9 10-4.48 10-9S17.52 3 12 3z" />
+                    </svg>
                     Report a Problem
                 </a>
                 {% else %}
-                <a href="{% url 'citizen_register' %}" class="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-primary-dark shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style="background:linear-gradient(135deg,#FFD700,#FFA500);font-size:1rem;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <a href="{% url 'citizen_register' %}"
+                    class="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    style="background:linear-gradient(135deg,#C75000,#992C2C);font-size:1rem;">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                     Join as Citizen
                 </a>
                 {% endif %}
-                <a href="{% url 'citizen_tracking' %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-1" style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);backdrop-filter:blur(8px);font-size:1rem;">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                <a href="{% url 'citizen_tracking' %}"
+                    class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white transition-all duration-300 hover:-translate-y-1"
+                    style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);backdrop-filter:blur(8px);font-size:1rem;">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
                     Track My Issue
                 </a>
             </div>
 
             <!-- Trust bar -->
-            <div class="mt-10 flex flex-wrap items-center gap-6 justify-center lg:justify-start text-blue-300 text-sm font-medium">
-                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> OTP Verified Registration</span>
-                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg> Aadhaar-Secured</span>
-                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg> Real-time Analytics</span>
+            <div
+                class="mt-10 flex flex-wrap items-center gap-6 justify-center lg:justify-start text-blue-300 text-sm font-medium">
+                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd" />
+                    </svg> OTP Verified Registration</span>
+                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                            clip-rule="evenodd" />
+                    </svg> Aadhaar-Secured</span>
+                <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-yellow-400" fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                    </svg> Real-time Analytics</span>
             </div>
         </div>
 
         <!-- Right: Stat cards -->
         <div class="flex-shrink-0 w-full max-w-sm lg:max-w-xs xl:max-w-sm grid grid-cols-2 gap-4">
-            <div class="col-span-2 rounded-2xl p-5 text-white" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px);">
-                <p class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-1">Total Issues Reported</p>
+            <div class="col-span-2 rounded-3xl p-6 text-white transition-all duration-300 hover:scale-[1.02] hover:border-white/20"
+                style="background:rgba(10,25,50,0.45);border:1.5px solid rgba(255,255,255,0.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -15px rgba(0,0,0,0.5);">
+                <p class="text-xs font-black uppercase tracking-widest text-yellow-400 mb-1">Total Issues Reported</p>
                 <p class="text-4xl font-black counter" data-target="{{ total_complaints }}">0</p>
-                <p class="text-blue-300 text-xs mt-1">Since platform launch</p>
+                <p class="text-blue-300/80 text-xs mt-1">Since platform launch</p>
             </div>
-            <div class="rounded-2xl p-5 text-white" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px);">
-                <p class="text-xs font-bold text-green-400 mb-1">Resolved</p>
+            <div class="rounded-3xl p-5 text-white transition-all duration-300 hover:scale-[1.02] hover:border-white/20"
+                style="background:rgba(10,25,50,0.45);border:1.5px solid rgba(255,255,255,0.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -15px rgba(0,0,0,0.5);">
+                <p class="text-xs font-black text-green-400 mb-1">Resolved</p>
                 <p class="text-3xl font-black counter text-green-300" data-target="{{ total_resolved_count }}">0</p>
             </div>
-            <div class="rounded-2xl p-5 text-white" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px);">
-                <p class="text-xs font-bold text-blue-300 mb-1">Citizens</p>
+            <div class="rounded-3xl p-5 text-white transition-all duration-300 hover:scale-[1.02] hover:border-white/20"
+                style="background:rgba(10,25,50,0.45);border:1.5px solid rgba(255,255,255,0.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -15px rgba(0,0,0,0.5);">
+                <p class="text-xs font-black text-blue-300 mb-1">Citizens</p>
                 <p class="text-3xl font-black counter text-blue-200" data-target="{{ total_citizens }}">0</p>
             </div>
-            <div class="col-span-2 rounded-2xl p-4 flex items-center gap-4" style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.2);">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.2);">
-                    <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="col-span-2 rounded-3xl p-5 flex items-center gap-4 transition-all duration-300 hover:scale-[1.02]"
+                style="background:rgba(255,191,0,0.06);border:1.5px solid rgba(255,191,0,0.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -15px rgba(0,0,0,0.3);">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style="background:rgba(255,191,0,0.15);border:1px solid rgba(255,191,0,0.3);">
+                    <svg class="w-6 h-6 text-yellow-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
                 <div>
-                    <p class="text-white font-bold text-lg">{{ pending_issues }} Pending</p>
-                    <p class="text-yellow-300 text-xs">Issues awaiting attention</p>
+                    <p class="text-white font-black text-lg">{{ pending_issues }} Pending</p>
+                    <p class="text-yellow-300/80 text-xs">Issues awaiting attention</p>
                 </div>
             </div>
         </div>
@@ -89,8 +151,9 @@
 
     <!-- Wave divider -->
     <div class="absolute bottom-0 left-0 right-0" style="line-height:0;">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:60px;display:block;">
-            <path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z" fill="#F0F4F8"/>
+        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
+            style="width:100%;height:60px;display:block;">
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z" fill="#F0F4F8" />
         </svg>
     </div>
 </section>
@@ -100,8 +163,10 @@
 ════════════════════════════════════════════════════════════ -->
 <section class="py-16 bg-white relative">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex justify-center bg-[#F4F4F4] transition-transform duration-500 hover:scale-[1.02]">
-            <img src="{% static 'images/quote.jpg' %}" alt="Swami Vivekananda Quote" class="w-full h-auto object-contain">
+        <div
+            class="rounded-3xl overflow-hidden shadow-2xl border border-gray-100 flex justify-center bg-[#F4F4F4] transition-transform duration-500 hover:scale-[1.02]">
+            <img src="{% static 'images/quote.jpg' %}" alt="Swami Vivekananda Quote"
+                class="w-full h-auto object-contain">
         </div>
     </div>
 </section>
@@ -118,29 +183,39 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             <!-- Connector line (desktop only) -->
-            <div class="hidden md:block absolute top-12 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-yellow-300 via-blue-300 to-green-300" style="z-index:0;margin:0 10%;"></div>
+            <div class="hidden md:block absolute top-12 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-yellow-300 via-blue-300 to-green-300"
+                style="z-index:0;margin:0 10%;"></div>
 
             {% for step in steps %}{% endfor %}
 
             <!-- Step 1 -->
-            <div class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5" style="background:linear-gradient(135deg,#002D72,#004aad);">1</div>
+            <div
+                class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5"
+                    style="background:linear-gradient(135deg,#002D72,#004aad);">1</div>
                 <h3 class="text-lg font-black text-primary-dark mb-2">Register & Verify</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Sign up with your Aadhaar & mobile OTP. Your identity is encrypted and secure.</p>
+                <p class="text-gray-500 text-sm leading-relaxed">Sign up with your Aadhaar & mobile OTP. Your identity
+                    is encrypted and secure.</p>
             </div>
 
             <!-- Step 2 -->
-            <div class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5" style="background:linear-gradient(135deg,#d97706,#f59e0b);">2</div>
+            <div
+                class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5"
+                    style="background:linear-gradient(135deg,#d97706,#f59e0b);">2</div>
                 <h3 class="text-lg font-black text-primary-dark mb-2">Report the Issue</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Snap a photo, pin it on the map, choose a category, and submit your complaint in minutes.</p>
+                <p class="text-gray-500 text-sm leading-relaxed">Snap a photo, pin it on the map, choose a category, and
+                    submit your complaint in minutes.</p>
             </div>
 
             <!-- Step 3 -->
-            <div class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5" style="background:linear-gradient(135deg,#059669,#10b981);">3</div>
+            <div
+                class="relative z-10 bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg group-hover:scale-110 transition-transform duration-300 mb-5"
+                    style="background:linear-gradient(135deg,#059669,#10b981);">3</div>
                 <h3 class="text-lg font-black text-primary-dark mb-2">Track & Rate</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">Get a unique Problem ID. Track resolution progress live, then rate the municipal service.</p>
+                <p class="text-gray-500 text-sm leading-relaxed">Get a unique Problem ID. Track resolution progress
+                    live, then rate the municipal service.</p>
             </div>
         </div>
     </div>
@@ -159,7 +234,8 @@
                 <p class="mt-2 text-gray-500">Real issues resolved by our municipal teams.</p>
             </div>
             {% if total_resolved_count > 5 %}
-            <a href="{% url 'citizen_tracking' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-primary border-2 border-primary hover:bg-primary hover:text-white transition-all duration-200">
+            <a href="{% url 'citizen_tracking' %}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-primary border-2 border-primary hover:bg-primary hover:text-white transition-all duration-200">
                 View All {{ total_resolved_count }} →
             </a>
             {% endif %}
@@ -167,12 +243,18 @@
 
         <div class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {% for issue in recent_resolved %}
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+            <div
+                class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
                 <div class="h-1.5 w-full" style="background:linear-gradient(90deg,#10b981,#059669);"></div>
                 <div class="p-6 flex-1 flex flex-col">
                     <div class="flex justify-between items-center mb-4">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd" />
+                            </svg>
                             Resolved
                         </span>
                         <span class="text-xs text-gray-400 font-medium">{{ issue.resolved_at|date:"M d, Y" }}</span>
@@ -184,9 +266,14 @@
                     <p class="text-sm text-gray-600 flex-1 leading-relaxed line-clamp-3">
                         {{ issue.description|default:"Civic issue successfully resolved by the municipal team." }}
                     </p>
-                    <div class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+                    <div
+                        class="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
                         <span class="font-mono font-bold text-yellow-600">{{ issue.problem_id }}</span>
-                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -194,7 +281,9 @@
             <div class="col-span-full py-20 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
                 <div class="text-6xl mb-4">🌱</div>
                 <p class="text-gray-400 font-medium">No resolved issues yet — be the first to report!</p>
-                <a href="{% url 'citizen_register' %}" class="mt-4 inline-flex items-center px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary-dark transition">Register & Report</a>
+                <a href="{% url 'citizen_register' %}"
+                    class="mt-4 inline-flex items-center px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primary-dark transition">Register
+                    & Report</a>
             </div>
             {% endfor %}
         </div>
@@ -203,25 +292,54 @@
 
 
 <style>
-@keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.08);opacity:.8;} }
-.line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.08);
+            opacity: .8;
+        }
+    }
+
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .leaf-pattern-bg {
+        position: absolute;
+        inset: 0;
+        background-image: url("{% static 'images/leaf_pattern.png' %}");
+        background-repeat: repeat;
+        background-size: auto;
+        opacity: 0.045;
+        mix-blend-mode: overlay;
+    }
 </style>
 
 <script>
-// Animated counters
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.counter').forEach(function(el) {
-        var target = parseInt(el.getAttribute('data-target'), 10) || 0;
-        if (target === 0) { el.textContent = '0'; return; }
-        var duration = 1800, step = Math.ceil(target / (duration / 16));
-        var current = 0;
-        var timer = setInterval(function() {
-            current = Math.min(current + step, target);
-            el.textContent = current.toLocaleString();
-            if (current >= target) clearInterval(timer);
-        }, 16);
+    // Animated counters
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.counter').forEach(function (el) {
+            var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+            if (target === 0) { el.textContent = '0'; return; }
+            var duration = 1800, step = Math.ceil(target / (duration / 16));
+            var current = 0;
+            var timer = setInterval(function () {
+                current = Math.min(current + step, target);
+                el.textContent = current.toLocaleString();
+                if (current >= target) clearInterval(timer);
+            }, 16);
+        });
     });
-});
 </script>
 
 {% endblock %}

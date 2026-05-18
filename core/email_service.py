@@ -1,13 +1,17 @@
 import logging
-from django.core.mail import send_mail
+
 from django.conf import settings
+from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
+
+_FROM_EMAIL = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@birnagarmunicipality.gov.in')
+
 
 def send_otp_email(email_address: str, otp: str, purpose: str = 'Verification') -> bool:
     """
     Send a 6-digit OTP to the provided email address.
-    purpose: short label for the subject, e.g. 'Registration', 'Password Reset', 'Email Verification'.
+    purpose: short label for the subject, e.g. 'Registration', 'Password Reset'.
     Returns True if successful, False otherwise.
     """
     subject = f'Your {purpose} OTP - Mission Clean City'
@@ -19,30 +23,22 @@ def send_otp_email(email_address: str, otp: str, purpose: str = 'Verification') 
         f"Regards,\n"
         f"Birnagar Municipality"
     )
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@birnagarmunicipality.gov.in')
-    
     try:
-        sent = send_mail(
-            subject,
-            message,
-            from_email,
-            [email_address],
-            fail_silently=False,
-        )
+        sent = send_mail(subject, message, _FROM_EMAIL, [email_address], fail_silently=False)
         if sent:
-            logger.info(f"OTP ({purpose}) successfully sent to email: {email_address}")
+            logger.info("OTP (%s) successfully sent to: %s", purpose, email_address)
             return True
-        else:
-            logger.error(f"Failed to send OTP ({purpose}) to email: {email_address}")
-            return False
+        logger.error("Failed to send OTP (%s) to: %s", purpose, email_address)
+        return False
     except Exception as e:
-        logger.error(f"Exception while sending OTP ({purpose}) to {email_address}: {e}")
+        logger.error("Exception sending OTP (%s) to %s: %s", purpose, email_address, e)
         return False
 
-def send_registration_confirmation_email(email_address: str, name: str, citizen_id: str, mobile_number: str, password: str) -> bool:
-    """
-    Send a confirmation email after successful registration with credentials.
-    """
+
+def send_registration_confirmation_email(
+    email_address: str, name: str, citizen_id: str, mobile_number: str, password: str
+) -> bool:
+    """Send a confirmation email after successful citizen registration with credentials."""
     subject = 'Registration Successful - Mission Clean City'
     message = (
         f"Dear {name},\n\n"
@@ -53,32 +49,22 @@ def send_registration_confirmation_email(email_address: str, name: str, citizen_
         f"Mobile Number (Username): {mobile_number}\n"
         f"Password: {password}\n"
         f"----------------------------------------\n\n"
-        f"Please keep these credentials safe. You can now log in using your mobile number and the password above.\n\n"
+        f"Please keep these credentials safe. You can now log in using your mobile number and password above.\n\n"
         f"Regards,\n"
         f"Birnagar Municipality"
     )
-    # Note: Mobile number is used for login, not email. I should clarify that.
-    # Actually, the username is the mobile number.
-    
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@birnagarmunicipality.gov.in')
-    
     try:
-        sent = send_mail(
-            subject,
-            message,
-            from_email,
-            [email_address],
-            fail_silently=False,
-        )
+        sent = send_mail(subject, message, _FROM_EMAIL, [email_address], fail_silently=False)
         return bool(sent)
     except Exception as e:
-        logger.error(f"Exception while sending confirmation email to {email_address}: {e}")
+        logger.error("Exception sending confirmation email to %s: %s", email_address, e)
         return False
 
-def send_admin_registration_confirmation_email(email_address: str, name: str, employee_id: str, password: str) -> bool:
-    """
-    Send a confirmation email after successful admin registration with credentials.
-    """
+
+def send_admin_registration_confirmation_email(
+    email_address: str, name: str, employee_id: str, password: str
+) -> bool:
+    """Send a confirmation email after successful admin registration with credentials."""
     subject = 'Admin Registration Successful - Mission Clean City'
     message = (
         f"Dear {name},\n\n"
@@ -88,21 +74,13 @@ def send_admin_registration_confirmation_email(email_address: str, name: str, em
         f"Employee ID (Username): {employee_id}\n"
         f"Password: {password}\n"
         f"----------------------------------------\n\n"
-        f"Please keep these credentials safe. You can now log in using your Employee ID and the password above to access the Admin Dashboard.\n\n"
+        f"Please keep these credentials safe. You can now log in using your Employee ID and password above.\n\n"
         f"Regards,\n"
         f"Birnagar Municipality"
     )
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@birnagarmunicipality.gov.in')
-    
     try:
-        sent = send_mail(
-            subject,
-            message,
-            from_email,
-            [email_address],
-            fail_silently=False,
-        )
+        sent = send_mail(subject, message, _FROM_EMAIL, [email_address], fail_silently=False)
         return bool(sent)
     except Exception as e:
-        logger.error(f"Exception while sending admin confirmation email to {email_address}: {e}")
+        logger.error("Exception sending admin confirmation email to %s: %s", email_address, e)
         return False

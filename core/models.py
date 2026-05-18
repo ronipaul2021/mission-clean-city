@@ -7,16 +7,19 @@ Models for the Birnagar Municipality civic platform.
   - Complaint   : civic issue reports with full lifecycle tracking
 """
 
+import io
 import os
 import uuid
 import random
 import logging
 import hashlib
+from datetime import timedelta
 
+from PIL import Image
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils import timezone
-from datetime import timedelta
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 logger = logging.getLogger(__name__)
@@ -287,18 +290,13 @@ class Complaint(models.Model):
 
     def _compress_image(self, image_field):
         """
-        Compress an uploaded image to max 1200×1200 px, JPEG 75%.
-        BUG FIX: use os.path.basename() so the upload_to prefix is not
-        doubled, which previously caused deeply-nested media folders like
-        complaints_photos/complaints_photos/complaints_photos/...
+        Compress an uploaded image to max 1200x1200 px, JPEG 75%.
+        Uses os.path.basename() so the upload_to prefix is not doubled,
+        which previously caused deeply-nested media folders.
         """
         if not image_field or not image_field.name:
             return
         try:
-            from PIL import Image
-            import io
-            from django.core.files.base import ContentFile
-
             img = Image.open(image_field)
             if img.mode in ('RGBA', 'P', 'LA'):
                 img = img.convert('RGB')
@@ -308,8 +306,6 @@ class Complaint(models.Model):
             img.save(buffer, format='JPEG', quality=75, optimize=True)
             buffer.seek(0)
 
-            # ✅ Use only the basename — upload_to='complaints_photos/' will
-            #    prepend the directory, avoiding nested path duplication.
             base_name = os.path.splitext(os.path.basename(image_field.name))[0]
             image_field.save(f"{base_name}.jpg", ContentFile(buffer.read()), save=False)
         except Exception as exc:

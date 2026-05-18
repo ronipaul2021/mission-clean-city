@@ -9,12 +9,17 @@ Contains:
 """
 
 import json
+import io
+import os
 import time
 import logging
 import hashlib
 
+from cryptography.fernet import Fernet, InvalidToken
+from PIL import Image, ImageOps
 from django.conf import settings
 from django.core.cache import cache
+from django.core.files.base import ContentFile
 from django.db.models import Count, Avg, Case, When, IntegerField as _Int
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncQuarter, TruncYear
 from django.utils import timezone
@@ -27,12 +32,11 @@ logger = logging.getLogger(__name__)
 # 1. AADHAAR ENCRYPTION (with key-rotation support)
 # ==============================================================================
 
-def _get_fernet(key_str: str):
+def _get_fernet(key_str: str) -> Fernet:
     """Return a Fernet instance for the given base64 key string."""
     if not key_str:
         raise ValueError("Fernet key is empty.")
     try:
-        from cryptography.fernet import Fernet
         return Fernet(key_str.encode())
     except Exception as exc:
         raise ValueError(f"Invalid Fernet key: {exc}") from exc
@@ -547,20 +551,15 @@ def validate_and_compress_image(image_file, max_kb=100, require_square=True):
     - Compresses to stay under max_kb WITHOUT compromising clarity.
     Returns: (processed_content_file, error_message)
     """
-    from PIL import Image
-    import io
-    from django.core.files.base import ContentFile
-    import os
-
     ext = os.path.splitext(image_file.name)[1].lower()
-    if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+    if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
         return None, "Only .jpg, .png, or .webp files are allowed."
 
     try:
         image_file.seek(0)
         img = Image.open(image_file)
 
-        if img.mode not in ('RGB',):
+        if img.mode != 'RGB':
             img = img.convert('RGB')
 
         width, height = img.size
@@ -612,10 +611,6 @@ def auto_crop_face(image_file):
     try:
         import cv2
         import numpy as np
-        from PIL import Image, ImageOps
-        import io
-        from django.core.files.base import ContentFile
-        import os
 
         image_file.seek(0)
         pil_img = Image.open(image_file)
@@ -624,38 +619,37 @@ def auto_crop_face(image_file):
         if pil_img.mode != 'RGB':
             pil_img = pil_img.convert('RGB')
 
-        open_cv_image = np.array(pil_img)
-        open_cv_image = open_cv_image[:, :, ::-1].copy()
+        open_cv_image = np.array(pil_img)[:, :, ::-1].copy()  # RGB → BGR
         gray = cv2.cvtColor(open_cv_image, cv2.COLOR_BGR2GRAY)
 
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        face_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+        )
+        faces = face_cascade.detectMultiScale(
+            gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+        )
 
         img_w, img_h = pil_img.size
 
         if len(faces) > 0:
-            faces = sorted(faces, key=lambda x: x[2] * x[3], reverse=True)
-            x, y, w, h = faces[0]
+            x, y, w, h = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)[0]
             face_center_x = x + w // 2
             face_center_y = y + h // 2
-            sq_size = int(max(w, h) * 1.5)
-            sq_size = min(sq_size, img_w, img_h)
+            sq_size = min(int(max(w, h) * 1.5), img_w, img_h)
 
-            left = face_center_x - sq_size // 2
-            top  = face_center_y - sq_size // 2
-
-            if left < 0: left = 0
-            if top < 0:  top = 0
-            if left + sq_size > img_w: left = img_w - sq_size
-            if top + sq_size > img_h:  top = img_h - sq_size
-
-            pil_img = pil_img.crop((left, top, left + sq_size, top + sq_size))
+            left = max(0, face_center_x - sq_size // 2)
+            top  = max(0, face_center_y - sq_size // 2)
+            if left + sq_size > img_w:
+                left = img_w - sq_size
+            if top + sq_size > img_h:
+                top = img_h - sq_size
         else:
             # Fallback: center crop
             sq_size = min(img_w, img_h)
             left = (img_w - sq_size) // 2
             top  = (img_h - sq_size) // 2
-            pil_img = pil_img.crop((left, top, left + sq_size, top + sq_size))
+
+        pil_img = pil_img.crop((left, top, left + sq_size, top + sq_size))
 
         buf = io.BytesIO()
         pil_img.save(buf, format='JPEG', quality=100)

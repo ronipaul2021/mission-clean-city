@@ -4,6 +4,7 @@ Django settings for BM (Birnagar Municipality) project.
 
 from pathlib import Path
 import os
+
 from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -78,6 +79,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        # WAL mode: allows concurrent reads during writes — noticeably faster
+        # under multiple simultaneous requests (e.g., multiple browser tabs).
+        'OPTIONS': {
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;',
+        },
     }
 }
 # For PostgreSQL in production, replace DATABASES with:
@@ -159,7 +165,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Disk space alert threshold (bytes). Default: 5 GB.
 # Used by: python manage.py check_disk_space

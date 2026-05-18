@@ -12,64 +12,70 @@ Improvements over the original:
   - Consistent guard pattern: role checks at the very top of protected views
 """
 
+# --- Standard Library ---
 import csv
-import time
-import random
+import json
 import logging
+import os
+import random
+import time
+from datetime import timedelta
+from urllib.parse import urlencode
 
+# --- Django ---
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Count, Q
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Q, Count
-from urllib.parse import urlencode
+from django.utils.timesince import timesince
 
-from .models import User, Complaint, Suggestion, Notification
-from .email_service import send_otp_email, send_registration_confirmation_email, send_admin_registration_confirmation_email
-from django.contrib.auth.hashers import make_password
+# --- Local ---
+from .email_service import (
+    send_admin_registration_confirmation_email,
+    send_otp_email,
+    send_registration_confirmation_email,
+)
+from .image_processor import ImageProcessor
+from .models import Complaint, Notification, Suggestion, User
+from .serializers import ComplaintSerializer, SuggestionSerializer, UserSerializer
+from .services import ComplaintService
 from .utils import (
-    encrypt_aadhaar,
-    decrypt_aadhaar,
-    hash_aadhaar,
-    reencrypt_aadhaar_if_needed,
-    store_otp_in_session,
-    verify_otp_value,
-    is_otp_expired,
-    get_otp_resend_delay_remaining,
-    clear_otp_session,
-    OTP_SESSION_KEY,
-    OTP_DATA_KEY,
-    FORGOT_PW_DATA_KEY,
-    PENDING_EMAIL_KEY,
-    ADMIN_REG_DATA_KEY,
     ADMIN_FORGOT_PW_DATA_KEY,
     ADMIN_PENDING_EMAIL_KEY,
-    get_complaint_chart_data,
-    get_suggestion_chart_data,
-    get_citizen_growth_chart_data,
-    get_complaint_kpis,
-    invalidate_analytics_cache,
-    check_upload_rate_limit,
-    validate_and_compress_image,
+    ADMIN_REG_DATA_KEY,
+    FORGOT_PW_DATA_KEY,
+    OTP_DATA_KEY,
+    OTP_SESSION_KEY,
+    PENDING_EMAIL_KEY,
     auto_crop_face,
+    check_upload_rate_limit,
+    clear_otp_session,
+    decrypt_aadhaar,
+    encrypt_aadhaar,
+    get_citizen_growth_chart_data,
+    get_complaint_chart_data,
+    get_complaint_kpis,
+    get_otp_resend_delay_remaining,
+    get_suggestion_chart_data,
+    hash_aadhaar,
+    invalidate_analytics_cache,
+    is_otp_expired,
+    reencrypt_aadhaar_if_needed,
+    store_otp_in_session,
+    validate_and_compress_image,
+    verify_otp_value,
 )
-from .services import ComplaintService
-from .serializers import ComplaintSerializer, SuggestionSerializer, UserSerializer
-from .image_processor import ImageProcessor
 from core.services.chatbot_service import get_chatbot_response, get_gemini_response
-
-import os
-from datetime import timedelta
-from django.http import FileResponse, Http404
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -446,7 +452,7 @@ def citizen_login(request):
             messages.error(request, f"Invalid mobile number or password. {remaining} attempt{'s' if remaining > 1 else ''} remaining.")
         return redirect('citizen_login')
     return render(request, 'citizen_login.html')
-    
+
 
 def forgot_password(request):
     """
@@ -1118,7 +1124,7 @@ def admin_verify_email_update(request):
             return redirect('admin_dashboard')
         else:
             messages.error(request, "Invalid OTP.")
-            
+
     return render(request, 'admin_verify_email_otp.html', {'new_email': new_email})
 
 
@@ -1212,11 +1218,12 @@ def submit_problem(request):
             video=video,
         )
         complaint.save()
+        invalidate_analytics_cache()
         messages.success(request, f"Problem submitted! Your Tracking ID is {complaint.problem_id}")
         return redirect('citizen_tracking')
 
     return render(request, 'submit_problem.html', {
-        'daily_left': daily_complaints_left,
+        'daily_left':         daily_complaints_left,
         'monthly_left': monthly_complaints_left,
         'can_submit': can_submit,
         'unrated_resolved': unrated_resolved,
@@ -1241,13 +1248,14 @@ def check_duplicate(request):
     ).exclude(status=Complaint.Status.TERMINATED).order_by('-submitted_at').first()
     
     if duplicate:
-        import json
-        from django.utils.timesince import timesince
         return HttpResponse(json.dumps({
             'duplicate': True,
-            'message': f"A similar complaint ({duplicate.get_category_display()}) was filed in your ward {timesince(duplicate.submitted_at)} ago. Are you sure you want to submit another one?"
+            'message': (
+                f"A similar complaint ({duplicate.get_category_display()}) was filed in your ward "
+                f"{timesince(duplicate.submitted_at)} ago. Are you sure you want to submit another one?"
+            ),
         }), content_type='application/json')
-        
+
     return HttpResponse('{"duplicate": false}', content_type='application/json')
 
 
@@ -1781,6 +1789,7 @@ def rate_complaint(request, complaint_id):
 
         complaint.rating = rating_value
         complaint.save()
+        invalidate_analytics_cache()
         messages.success(request, f"Thank you! You rated this resolution {rating_value}/5 stars.")
 
     referer = request.META.get('HTTP_REFERER')
@@ -1918,6 +1927,7 @@ def reopen_complaint(request, complaint_id):
         complaint.reopen_deadline = None
         complaint.rating          = None
         complaint.save()
+        invalidate_analytics_cache()
         messages.success(
             request,
             f"{complaint.problem_id} has been re-opened. The municipality will investigate again."
@@ -1956,6 +1966,7 @@ def appeal_complaint(request, complaint_id):
         complaint.appealed_at = timezone.now()
         complaint.status = Complaint.Status.PENDING # Revert to pending for admin review
         complaint.save(update_fields=['appeal_text', 'appealed_at', 'status'])
+        invalidate_analytics_cache()
         messages.success(request, f"Your appeal for {complaint.problem_id} has been submitted successfully.")
         return redirect('citizen_tracking')
 
@@ -1966,15 +1977,16 @@ def appeal_complaint(request, complaint_id):
 def print_work_order(request, complaint_id):
     if request.user.role != User.Role.ADMIN:
         return error_403(request)
-        
+
     complaint = get_object_or_404(Complaint, id=complaint_id)
     return render(request, 'print_work_order.html', {'complaint': complaint})
+
 
 @login_required
 def print_suggestion(request, suggestion_id):
     if request.user.role != User.Role.ADMIN:
         return error_403(request)
-        
+
     suggestion = get_object_or_404(Suggestion, id=suggestion_id)
     return render(request, 'print_suggestion.html', {'suggestion': suggestion})
 
@@ -1999,16 +2011,15 @@ def chatbot_query(request):
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    import json
+
     try:
         data = json.loads(request.body)
         user_message = data.get('message', '').strip()
-        history = data.get('history', []) # List of [role, text]
-        
+        history = data.get('history', [])  # List of [role, text]
+
         if not user_message:
             return JsonResponse({'error': 'Empty message'}, status=400)
-            
+
         ai_response = get_chatbot_response(user_message, chat_history=history)
         return JsonResponse({'response': ai_response})
     except Exception:
@@ -2031,7 +2042,7 @@ def error_403(request, exception=None):
     return render(request, 'errors/403.html', status=403)
 
 
-def error_404(request, exception=None):
+def error_404(request, exception=None, url=None):
     """Not Found — URL does not match any pattern."""
     return render(request, 'errors/404.html', status=404)
 

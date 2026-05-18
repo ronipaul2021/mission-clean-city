@@ -13,9 +13,9 @@ from core.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
     # Media files — routed through protected_media gatekeeper (login required)
     path('media/<path:file_path>', protected_media, name='protected_media'),
+    path('', include('core.urls')),
 ]
 
 # Custom error handlers — active only when DEBUG=False.
