@@ -262,10 +262,8 @@
                         <span class="text-xs text-gray-400 font-medium">{{ issue.resolved_at|date:"M d, Y" }}</span>
                     </div>
                     <div class="flex items-center gap-2 mb-3">
-                        <span class="px-2 py-0.5 bg-blue-50 text-primary text-xs font-bold rounded-lg">Ward {{
-                            issue.ward_number }}</span>
-                        <span class="px-2 py-0.5 bg-gray-50 text-gray-600 text-xs font-medium rounded-lg">{{
-                            issue.get_category_display }}</span>
+                        <span class="px-2 py-0.5 bg-blue-50 text-primary text-xs font-bold rounded-lg">Ward {{ issue.ward_number }}</span>
+                        <span class="px-2 py-0.5 bg-gray-50 text-gray-600 text-xs font-medium rounded-lg">{{ issue.get_category_display }}</span>
                     </div>
                     <p class="text-sm text-gray-600 flex-1 leading-relaxed line-clamp-3">
                         {{ issue.description|default:"Civic issue successfully resolved by the municipal team." }}
