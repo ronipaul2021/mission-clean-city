@@ -777,8 +777,8 @@
             document.addEventListener('click', function(e) {
                 const link = e.target.closest('a');
                 if (link && link.getAttribute('href') === LOGOUT_URL) {
-                    // Do not trigger modal for auto-logout warning popup links
-                    if (!link.closest('#idle-overlay')) {
+                    // Do not trigger modal for auto-logout warning popup links, or the confirmation modal's button itself
+                    if (!link.closest('#idle-overlay') && !link.closest('#logout-confirm-modal')) {
                         openModal(e);
                     }
                 }
