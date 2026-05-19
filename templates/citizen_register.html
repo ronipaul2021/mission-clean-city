@@ -45,14 +45,27 @@
                     </div>
                 </div>
 
-                <div>
-                    <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number *</label>
-                    <div class="mt-1">
-                        <input id="aadhaar" name="aadhaar" type="text" required pattern="\d{12}"
-                            title="Please enter exactly 12 digits" maxlength="12" minlength="12"
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number *</label>
+                        <div class="mt-1">
+                            <input id="aadhaar" name="aadhaar" type="text" required pattern="\d{12}"
+                                title="Please enter exactly 12 digits" maxlength="12" minlength="12"
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Securely encrypted at rest.</p>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">Securely encrypted at rest.</p>
+
+                    <div>
+                        <label for="aadhaar_card_document" class="block text-sm font-medium text-gray-700">Aadhaar Document Upload *</label>
+                        <div class="mt-1">
+                            <input id="aadhaar_card_document" name="aadhaar_card_document" type="file" accept=".jpg,.jpeg" required
+                                onchange="validateAadhaarDocSize(this)"
+                                class="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                        </div>
+                        <p id="aadhaar-doc-error" class="mt-1 text-xs text-red-600 hidden font-bold">File must be JPG/JPEG and under 100KB!</p>
+                        <p class="mt-1 text-xs text-gray-500">Must be a <b>JPG or JPEG</b> under 100KB.</p>
+                    </div>
                 </div>
 
                 <div>
@@ -130,27 +143,79 @@
 </div>
 
 <script>
+    function checkFormValidity() {
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const profileInput = document.getElementById('profile_photo');
+        const aadhaarDocInput = document.getElementById('aadhaar_card_document');
+        
+        let isValid = true;
+        
+        // Profile Photo check
+        if (profileInput.files && profileInput.files[0]) {
+            const fileSizeKB = profileInput.files[0].size / 1024;
+            if (fileSizeKB > 100) {
+                isValid = false;
+            }
+        }
+        
+        // Aadhaar Doc check
+        if (aadhaarDocInput.files && aadhaarDocInput.files[0]) {
+            const file = aadhaarDocInput.files[0];
+            const fileSizeKB = file.size / 1024;
+            const fileName = file.name.toLowerCase();
+            const isJPG = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');
+            if (fileSizeKB > 100 || !isJPG) {
+                isValid = false;
+            }
+        }
+        
+        if (isValid) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
     function validatePhotoSize(input, previewId) {
         const errorMsg = document.getElementById('photo-error');
-        const submitBtn = document.querySelector('button[type="submit"]');
         
         if (input.files && input.files[0]) {
             const fileSizeKB = input.files[0].size / 1024;
             if (fileSizeKB > 100) {
                 // File too large
                 errorMsg.classList.remove('hidden');
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 input.value = ''; // Clear the invalid file
                 document.getElementById(previewId).classList.add('hidden');
             } else {
                 // File is fine
                 errorMsg.classList.add('hidden');
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 previewImage(input, previewId); // Call the existing preview function
             }
         }
+        checkFormValidity();
+    }
+
+    function validateAadhaarDocSize(input) {
+        const errorMsg = document.getElementById('aadhaar-doc-error');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fileSizeKB = file.size / 1024;
+            const fileName = file.name.toLowerCase();
+            const isJPG = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');
+            
+            if (fileSizeKB > 100 || !isJPG) {
+                // File too large or invalid format
+                errorMsg.classList.remove('hidden');
+                input.value = ''; // Clear the invalid file
+            } else {
+                // File is fine
+                errorMsg.classList.add('hidden');
+            }
+        }
+        checkFormValidity();
     }
 </script>
 {% endblock %}

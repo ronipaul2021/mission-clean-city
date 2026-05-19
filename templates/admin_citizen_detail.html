@@ -92,6 +92,17 @@
                         <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Ward Number</p>
                         <p class="mt-1 text-lg font-bold text-gray-900">Ward {{ citizen.ward_number }}</p>
                     </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Aadhaar Card Document</p>
+                        {% if citizen.aadhaar_card_document %}
+                            <a href="{{ citizen.aadhaar_card_document.url }}" target="_blank" class="mt-2 inline-flex items-center px-3 py-1.5 border border-secondary text-xs font-bold rounded-lg text-secondary bg-white hover:bg-blue-50 transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                View Uploaded Document
+                            </a>
+                        {% else %}
+                            <p class="mt-1 text-sm text-gray-400 font-medium">No document uploaded</p>
+                        {% endif %}
+                    </div>
                     <div class="md:col-span-2">
                         <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Registered Address</p>
                         <p class="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{{ citizen.address }}</p>

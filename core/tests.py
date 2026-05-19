@@ -230,3 +230,79 @@ class AnalyticsTestCase(TestCase):
         
         response = self.client.get(reverse('admin_analytics'))
         self.assertEqual(response.context['total_complaints'], 4)
+
+
+class CitizenRegistrationTestCase(TestCase):
+    def test_registration_requires_aadhaar_document(self):
+        """Test that registering without Aadhaar card document fails validation."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        profile_photo = SimpleUploadedFile("profile.jpg", b"dummy_content", content_type="image/jpeg")
+        
+        data = {
+            'name': 'New Citizen',
+            'email': 'new@citizen.com',
+            'mobile_number': '7777777777',
+            'aadhaar': '111122223333',
+            'address': 'Birnagar Ward 1',
+            'ward_number': '1',
+            'password': 'Password123',
+            'retype_password': 'Password123',
+            'profile_photo': profile_photo,
+        }
+        response = self.client.post(reverse('citizen_register'), data)
+        self.assertEqual(response.status_code, 302)
+        # Verify no OTP data set
+        self.assertFalse(self.client.session.get('otp_data_key'))
+
+    def test_registration_aadhaar_document_format_validation(self):
+        """Test that registering with non-JPG/JPEG Aadhaar document fails."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        profile_photo = SimpleUploadedFile("profile.jpg", b"dummy_content", content_type="image/jpeg")
+        aadhaar_doc = SimpleUploadedFile("doc.pdf", b"dummy_pdf_content", content_type="application/pdf")
+        
+        data = {
+            'name': 'New Citizen',
+            'email': 'new@citizen.com',
+            'mobile_number': '7777777777',
+            'aadhaar': '111122223333',
+            'address': 'Birnagar Ward 1',
+            'ward_number': '1',
+            'password': 'Password123',
+            'retype_password': 'Password123',
+            'profile_photo': profile_photo,
+            'aadhaar_card_document': aadhaar_doc,
+        }
+        response = self.client.post(reverse('citizen_register'), data)
+        self.assertEqual(response.status_code, 302)
+        # Verify no OTP data set
+        self.assertFalse(self.client.session.get('otp_data_key'))
+
+    def test_registration_with_valid_aadhaar_document(self):
+        """Test that registering with a valid Aadhaar document passes validation."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        # Use a small valid 1x1 pixel JPEG file to ensure Image.open and cv2/PIL don't fail
+        # This is a tiny valid 1x1 black pixel JPEG byte string
+        jpeg_bytes = b'\xff\xd8\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\xff\xda\x00\x08\x01\x01\x00\x00?\x00\x37\xff\xd9'
+        profile_photo = SimpleUploadedFile("profile.jpg", jpeg_bytes, content_type="image/jpeg")
+        aadhaar_doc = SimpleUploadedFile("doc.jpg", jpeg_bytes, content_type="image/jpeg")
+        
+        data = {
+            'name': 'New Citizen',
+            'email': 'new@citizen.com',
+            'mobile_number': '7777777777',
+            'aadhaar': '111122223333',
+            'address': 'Birnagar Ward 1',
+            'ward_number': '1',
+            'password': 'Password123',
+            'retype_password': 'Password123',
+            'profile_photo': profile_photo,
+            'aadhaar_card_document': aadhaar_doc,
+        }
+        
+        from unittest.mock import patch
+        # Patch email sending to avoid actual network call or configuration errors
+        with patch('core.views.send_otp_email', return_value=True):
+            response = self.client.post(reverse('citizen_register'), data)
+        # Should redirect to OTP verification page ('verify_otp')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('verify_otp'), response.url)

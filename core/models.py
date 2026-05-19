@@ -83,6 +83,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     # One-way: cannot be reversed back to the Aadhaar number.
     aadhaar_hash      = models.CharField(max_length=64, unique=True, blank=True, null=True,
                                          help_text="SHA-256 hash of Aadhaar for duplicate detection")
+    aadhaar_card_document = models.FileField(upload_to='aadhaar_documents/', blank=True, null=True,
+                                             help_text="Uploaded Aadhaar Card Document (JPG/JPEG only)")
     ward_number       = models.IntegerField(choices=_WARD_CHOICES, blank=True, null=True)
 
     # Admin-specific fields

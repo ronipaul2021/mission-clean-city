@@ -258,10 +258,11 @@ def citizen_register(request):
         password     = request.POST.get('password', '')
         retype_pw    = request.POST.get('retype_password', '')
         profile_photo = request.FILES.get('profile_photo')
+        aadhaar_card_document = request.FILES.get('aadhaar_card_document')
 
         # --- Validation ---
-        if not all([name, email, mobile, aadhaar, address, ward_number, password, profile_photo]):
-            messages.error(request, "All fields including Email and Profile Photo are mandatory.")
+        if not all([name, email, mobile, aadhaar, address, ward_number, password, profile_photo, aadhaar_card_document]):
+            messages.error(request, "All fields including Email, Profile Photo and Aadhaar Card Document are mandatory.")
             return redirect('citizen_register')
 
         if len(mobile) != 10 or not mobile.isdigit():
@@ -270,6 +271,17 @@ def citizen_register(request):
 
         if len(aadhaar) != 12 or not aadhaar.isdigit():
             messages.error(request, "Aadhaar number must be exactly 12 digits.")
+            return redirect('citizen_register')
+
+        # Aadhaar Card Document format validation
+        aadhaar_doc_name = aadhaar_card_document.name.lower()
+        if not (aadhaar_doc_name.endswith('.jpg') or aadhaar_doc_name.endswith('.jpeg')):
+            messages.error(request, "Aadhaar Card Document must be in JPG or JPEG format.")
+            return redirect('citizen_register')
+
+        # Aadhaar Card Document size validation (max 100KB)
+        if aadhaar_card_document.size > 100 * 1024:
+            messages.error(request, "Aadhaar Card Document size cannot exceed 100KB.")
             return redirect('citizen_register')
 
         if password != retype_pw:
@@ -305,6 +317,9 @@ def citizen_register(request):
         # Temporarily save profile photo for OTP session
         photo_path = default_storage.save(f"temp_profiles/{mobile}_{processed_photo.name}", processed_photo)
 
+        # Temporarily save Aadhaar Card Document for OTP session
+        aadhaar_doc_path = default_storage.save(f"temp_aadhaars/{mobile}_{aadhaar_card_document.name}", aadhaar_card_document)
+
         # Store registration data + OTP in session
         request.session[OTP_DATA_KEY] = {
             'name': name, 'email': email, 'mobile_number': mobile,
@@ -313,6 +328,7 @@ def citizen_register(request):
             'address': address, 'ward_number': ward_number, 'password': hashed_password,
             'plain_password': password,
             'profile_photo_path': photo_path,
+            'aadhaar_card_document_path': aadhaar_doc_path,
         }
 
         otp = str(random.randint(100000, 999999))
@@ -402,6 +418,13 @@ def verify_otp(request):
                 with default_storage.open(photo_path) as f:
                     user.profile_photo.save(photo_path.split('/')[-1], f, save=True)
                 default_storage.delete(photo_path)
+
+            aadhaar_doc_path = data.get('aadhaar_card_document_path')
+            if aadhaar_doc_path and default_storage.exists(aadhaar_doc_path):
+                with default_storage.open(aadhaar_doc_path) as f:
+                    user.aadhaar_card_document.save(aadhaar_doc_path.split('/')[-1], f, save=True)
+                default_storage.delete(aadhaar_doc_path)
+
             # Send confirmation email with credentials
             plain_password = data.get('plain_password')
             send_registration_confirmation_email(user.email, user.name, user.citizen_id, user.mobile_number, plain_password)
