@@ -20,7 +20,7 @@ GEMINI_API_KEY = getattr(settings, 'GEMINI_API_KEY', None)
 
 # Model IDs
 BYTEZ_MODEL = "gemini-1.5-flash"
-GOOGLE_MODEL = "gemini-flash-latest"
+GOOGLE_MODEL = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = """
 You are "Birni", the official AI Civic Assistant for Birnagar Municipality's "Mission Clean City" platform.
@@ -46,18 +46,18 @@ GUIDELINES:
 
 def get_chatbot_response(user_query, chat_history=None):
     """
-    Attempts to get a response from Bytez, with a fallback to direct Google API.
+    Attempts to get a response from direct Google API, with a fallback to Bytez.
     """
-    # 1. Try Bytez Path (Primary)
-    if BYTEZ_API_KEY and len(BYTEZ_API_KEY) > 10:
-        response = _call_bytez(user_query, chat_history)
-        if response and not response.startswith("Error:"):
-            return response
-        logger.warning(f"Bytez failed or returned error: {response}. Falling back to Direct Google API.")
-
-    # 2. Try Direct Google Path (Fallback)
+    # 1. Try Direct Google Path (Primary)
     if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
-        return _call_google_direct(user_query, chat_history)
+        response = _call_google_direct(user_query, chat_history)
+        if response and not response.startswith("I'm having a little trouble connecting"):
+            return response
+        logger.warning("Direct Google API failed. Falling back to Bytez.")
+
+    # 2. Try Bytez Path (Fallback)
+    if BYTEZ_API_KEY and len(BYTEZ_API_KEY) > 10:
+        return _call_bytez(user_query, chat_history)
 
     return "Birni is temporarily offline. Please try again in a few minutes."
 
