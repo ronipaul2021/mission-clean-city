@@ -1,415 +1,453 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="bg-gray-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+<div class="bg-slate-50 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
     <style>
+        /* Gradient colors for dashboard headers and elements */
+        .navy-gradient-bg {
+            background: linear-gradient(135deg, #0A192F 0%, #172A45 100%);
+        }
+        .blue-glow-card {
+            border: 1px solid rgba(0, 45, 114, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .blue-glow-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 45, 114, 0.08);
+            border-color: rgba(0, 45, 114, 0.25);
+        }
+        .heatmap-cell {
+            transition: all 0.2s ease;
+        }
+        .heatmap-cell:hover {
+            outline: 2px solid #002D72;
+            z-index: 10;
+            transform: scale(1.08);
+        }
         @media print {
-            /* 1. Hide non-printable elements completely */
-            nav, 
-            footer, 
-            #mobile-drawer, 
-            #drawer-backdrop, 
-            .no-print, 
-            button, 
-            form, 
-            .bg-[#C75000],
-            #inactivity-warning-popup {
+            nav, footer, #mobile-drawer, #drawer-backdrop, .no-print, button, form, #inactivity-warning-popup {
                 display: none !important;
             }
-
-            /* 2. Reset backgrounds and page layout */
             body {
-                background-image: none !important;
-                background-color: #fff !important;
+                background: #fff !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                font-size: 11pt !important;
+                font-size: 10pt !important;
             }
-
             #print-area {
                 width: 100% !important;
                 max-width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                position: static !important;
             }
-
-            /* Force perfect rendering of colors, backgrounds, and gradients */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-
-            /* 3. Force clean section page breaks */
             .page-break-before {
                 page-break-before: always !important;
                 break-before: page !important;
             }
-
-            /* Avoid breaking components across page boundaries */
-            .bg-white, 
-            .bg-primary-dark, 
-            .bg-secondary, 
-            table, 
-            tr,
-            .shadow-sm {
+            .bg-white, .shadow-sm {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
-            }
-
-            /* Disable custom shadows and enforce clean borders */
-            .shadow-sm, .shadow-xl {
                 box-shadow: none !important;
                 border: 1px solid #e5e7eb !important;
             }
-
-            /* 4. Enforce high-density grid layouts on print sheet */
-            .grid-cols-2.sm\:grid-cols-3.lg\:grid-cols-6 {
-                display: grid !important;
-                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-                gap: 12px !important;
-            }
-
-            .grid-cols-1.md\:grid-cols-2 {
-                display: grid !important;
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                gap: 20px !important;
-            }
-
-            .grid-cols-1.lg\:grid-cols-3 {
-                display: grid !important;
-                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-                gap: 20px !important;
-            }
-
-            .lg\:col-span-2 {
-                grid-column: span 2 / span 2 !important;
-            }
-
-            .lg\:col-span-3 {
-                grid-column: span 3 / span 3 !important;
-            }
-
-            /* 5. Chart scaling and sizing in print */
             .h-72, .h-64 {
-                height: 250px !important;
-            }
-
-            canvas {
-                max-width: 100% !important;
-                height: 250px !important;
+                height: 220px !important;
             }
         }
     </style>
     <div class="max-w-7xl mx-auto" id="print-area">
 
-        <!-- Header -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <!-- Header Banner with premium Navy design -->
+        <div class="navy-gradient-bg p-8 rounded-2xl shadow-xl mb-8 relative overflow-hidden text-white">
+            <!-- Decorative circle backgrounds -->
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute right-1/4 -bottom-20 w-60 h-60 bg-yellow-400/5 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-primary-dark">Performance Analytics</h1>
-                    <p class="mt-1 text-sm text-gray-500">Real-time overview of municipal performance and citizen
-                        engagement — Birnagar Municipality</p>
-                    <div class="mt-4 flex space-x-4">
+                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 px-3.5 py-1 rounded-full font-bold text-xs tracking-wider uppercase">Municipal Operations Control</span>
+                    <h1 class="text-3.5xl font-black mt-3 tracking-tight">Mission Clean City Dashboard</h1>
+                    <p class="mt-2 text-sm text-blue-100 font-medium">Real-time civic analytics, public sentiment indicators, and resolution speed tracking &bull; Birnagar Municipality</p>
+                    
+                    <div class="mt-6 flex flex-wrap gap-3 no-print">
                         <a href="{% url 'admin_dashboard' %}"
-                            class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md font-medium text-sm transition">Citizen
-                            Issues</a>
+                            class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Citizen Issues
+                        </a>
                         <a href="{% url 'admin_suggestions' %}"
-                            class="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md font-medium text-sm transition">Citizen
-                            Suggestions</a>
+                            class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                            Suggestions
+                        </a>
                         <a href="{% url 'admin_analytics' %}"
-                            class="px-4 py-2 bg-primary text-white rounded-md font-medium text-sm">Analytics</a>
+                            class="px-4 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-primary-dark rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Analytics
+                        </a>
                     </div>
                 </div>
-                <div class="mt-4 md:mt-0 text-right">
-                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Logged in as</p>
-                    <p class="text-sm font-bold text-gray-800">{{ admin_name }}</p>
-                    <p class="text-xs text-gray-500">{{ admin_employee_id }}</p>
+                <div class="mt-6 md:mt-0 text-left md:text-right border-t border-white/10 pt-4 md:border-none md:pt-0">
+                    <p class="text-xs text-blue-200 uppercase tracking-widest font-extrabold">Authenticated Official</p>
+                    <p class="text-lg font-black text-yellow-300 mt-1">{{ admin_name }}</p>
+                    <p class="text-xs text-blue-100 font-medium">Employee ID: {{ admin_employee_id }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Advanced Filters & Actions -->
-        <div
-            class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
-            <form method="GET" class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide mr-2">Timeframe:</label>
-                    <select name="timeframe" onchange="this.form.submit()"
-                        class="bg-transparent border-none text-sm font-bold text-primary focus:ring-0 py-1 pr-8 cursor-pointer">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+            <form method="GET" id="analytics-filter-form" class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-wider mr-2.5">Timeframe:</label>
+                    <select name="timeframe" id="timeframe-selector" onchange="this.form.submit()"
+                        class="bg-transparent border-none text-sm font-extrabold text-primary focus:ring-0 py-0.5 pr-8 cursor-pointer">
                         <option value="all" {% if selected_timeframe == 'all' %}selected{% endif %}>All Time</option>
                         <option value="today" {% if selected_timeframe == 'today' %}selected{% endif %}>Today</option>
-                        <option value="weekly" {% if selected_timeframe == 'weekly' %}selected{% endif %}>This Week
-                        </option>
-                        <option value="monthly" {% if selected_timeframe == 'monthly' %}selected{% endif %}>This Month
-                        </option>
-                        <option value="quarterly" {% if selected_timeframe == 'quarterly' %}selected{% endif %}>This
-                            Quarter</option>
-                        <option value="half_yearly" {% if selected_timeframe == 'half_yearly' %}selected{% endif %}>Last 6
-                            Months</option>
-                        <option value="yearly" {% if selected_timeframe == 'yearly' %}selected{% endif %}>This Year
-                        </option>
-                        <option value="custom" {% if selected_timeframe == 'custom' %}selected{% endif %}>Custom Range
-                        </option>
+                        <option value="weekly" {% if selected_timeframe == 'weekly' %}selected{% endif %}>This Week</option>
+                        <option value="monthly" {% if selected_timeframe == 'monthly' %}selected{% endif %}>This Month</option>
+                        <option value="quarterly" {% if selected_timeframe == 'quarterly' %}selected{% endif %}>This Quarter</option>
+                        <option value="half_yearly" {% if selected_timeframe == 'half_yearly' %}selected{% endif %}>Last 6 Months</option>
+                        <option value="yearly" {% if selected_timeframe == 'yearly' %}selected{% endif %}>This Year</option>
+                        <option value="custom" {% if selected_timeframe == 'custom' %}selected{% endif %}>Custom Range</option>
                     </select>
                 </div>
 
                 {% if selected_timeframe == 'custom' %}
                 <div class="flex items-center gap-2">
                     <input type="date" name="start_date" value="{{ start_date }}"
-                        class="text-sm border border-gray-200 rounded-lg focus:ring-primary focus:border-primary px-3 py-1.5"
+                        class="text-sm border border-slate-200 rounded-xl focus:ring-primary focus:border-primary px-3 py-1.5 font-semibold"
                         required>
-                    <span class="text-gray-500 font-bold">to</span>
+                    <span class="text-slate-400 font-bold text-xs uppercase">to</span>
                     <input type="date" name="end_date" value="{{ end_date }}"
-                        class="text-sm border border-gray-200 rounded-lg focus:ring-primary focus:border-primary px-3 py-1.5"
+                        class="text-sm border border-slate-200 rounded-xl focus:ring-primary focus:border-primary px-3 py-1.5 font-semibold"
                         required>
                 </div>
                 {% endif %}
 
-                <div class="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide mr-2">Ward:</label>
-                    <select name="ward"
-                        class="bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 py-1 pr-8 cursor-pointer">
-                        <option value="">All Wards</option>
-                        {% for i in "123456789"|make_list %}
-                        <option value="{{ i }}" {% if selected_ward == i %}selected{% endif %}>Ward {{ i }}</option>
-                        {% endfor %}
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-wider mr-2.5">Ward Filter:</label>
+                    <select name="ward" id="ward-selector" onchange="this.form.submit()"
+                        class="bg-transparent border-none text-sm font-extrabold text-slate-700 focus:ring-0 py-0.5 pr-8 cursor-pointer">
+                        <option value="">All 14 Wards</option>
+                        <option value="1" {% if selected_ward == '1' %}selected{% endif %}>Ward 1</option>
+                        <option value="2" {% if selected_ward == '2' %}selected{% endif %}>Ward 2</option>
+                        <option value="3" {% if selected_ward == '3' %}selected{% endif %}>Ward 3</option>
+                        <option value="4" {% if selected_ward == '4' %}selected{% endif %}>Ward 4</option>
+                        <option value="5" {% if selected_ward == '5' %}selected{% endif %}>Ward 5</option>
+                        <option value="6" {% if selected_ward == '6' %}selected{% endif %}>Ward 6</option>
+                        <option value="7" {% if selected_ward == '7' %}selected{% endif %}>Ward 7</option>
+                        <option value="8" {% if selected_ward == '8' %}selected{% endif %}>Ward 8</option>
+                        <option value="9" {% if selected_ward == '9' %}selected{% endif %}>Ward 9</option>
+                        <option value="10" {% if selected_ward == '10' %}selected{% endif %}>Ward 10</option>
+                        <option value="11" {% if selected_ward == '11' %}selected{% endif %}>Ward 11</option>
+                        <option value="12" {% if selected_ward == '12' %}selected{% endif %}>Ward 12</option>
+                        <option value="13" {% if selected_ward == '13' %}selected{% endif %}>Ward 13</option>
+                        <option value="14" {% if selected_ward == '14' %}selected{% endif %}>Ward 14</option>
                     </select>
                 </div>
 
                 <button type="submit"
-                    class="bg-blue-50 text-primary hover:bg-blue-100 font-bold text-sm px-4 py-1.5 rounded-lg transition-colors">Apply
-                    Filters</button>
+                    class="bg-primary/10 text-primary hover:bg-primary/20 font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all">
+                    Apply Filter
+                </button>
+
+                {% if selected_ward or selected_timeframe != 'all' %}
+                <a href="{% url 'admin_analytics' %}" 
+                   class="bg-red-50 text-red-600 hover:bg-red-100 font-bold text-xs uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all">
+                    Clear Filters
+                </a>
+                {% endif %}
             </form>
 
             <button onclick="window.print()"
-                class="flex items-center gap-2 bg-gray-900 hover:bg-black text-white font-bold text-sm px-5 py-2 rounded-lg shadow-md transition-all transform hover:-translate-y-0.5">
+                class="flex items-center gap-2 bg-[#002D72] hover:bg-[#001a45] text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-md transition-all transform hover:-translate-y-0.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                Export to PDF
+                Print Report (PDF)
             </button>
         </div>
 
-        <!-- KPI Summary Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <!-- Redesigned High-density KPI Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-[#002D72]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-gray-900">{{ total_complaints }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Total Issues</p>
+                <p class="text-3xl font-black text-slate-800 leading-none">{{ total_complaints }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Total Issues</p>
             </div>
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-green-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-green-600">{{ resolved_complaints }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Resolved</p>
+                <p class="text-3xl font-black text-green-600 leading-none">{{ resolved_complaints }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Resolved</p>
             </div>
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-yellow-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-yellow-600">{{ pending_complaints }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Pending</p>
+                <p class="text-3xl font-black text-yellow-600 leading-none">{{ pending_complaints }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Pending</p>
             </div>
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-red-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-red-600">{{ terminated_complaints }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Terminated</p>
+                <p class="text-3xl font-black text-red-600 leading-none">{{ terminated_complaints }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Terminated</p>
             </div>
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-purple-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-purple-600">{{ total_suggestions }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Suggestions</p>
+                <p class="text-3xl font-black text-purple-600 leading-none">{{ total_suggestions }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Suggestions</p>
             </div>
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center text-center">
-                <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-2">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
                 </div>
-                <p class="text-2xl font-extrabold text-indigo-600">{{ avg_rating }}</p>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Avg Rating</p>
+                <p class="text-3xl font-black text-indigo-600 leading-none">{{ avg_rating|default:"0" }}</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Avg Rating</p>
+            </div>
+            <!-- NEW: Average Resolution Speed Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col items-center text-center blue-glow-card">
+                <div class="w-11 h-11 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
+                    <svg class="w-5.5 h-5.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <p class="text-3xl font-black text-orange-600 leading-none">{{ global_avg_res_time }}d</p>
+                <p class="text-xs font-bold text-slate-500 mt-2 tracking-wide uppercase">Avg Speed</p>
             </div>
         </div>
 
-        <!-- Resolution Rate Banner -->
-        <div
-            class="glass rounded-2xl p-6 mb-8 text-primary-dark flex flex-col sm:flex-row items-center justify-between gap-6 border-l-8 border-primary">
+        <!-- Performance summary block -->
+        <div class="bg-white rounded-2xl p-6 mb-8 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 border-l-8 border-[#002D72]">
             <div>
-                <p class="text-xs font-bold opacity-60 uppercase tracking-widest">Resolution Performance</p>
-                <div class="flex items-baseline gap-2">
-                    <p class="text-5xl font-black text-primary">{{ resolution_rate }}%</p>
-                    <p class="text-sm font-semibold text-gray-500">Global Resolution Rate</p>
+                <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Resolution Performance</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <p class="text-5xl font-black text-[#002D72]">{{ resolution_rate }}%</p>
+                    <p class="text-sm font-extrabold text-slate-500">Global Resolution Rate</p>
                 </div>
-                <p class="text-sm text-gray-600 mt-1 italic">Total {{ resolved_complaints }} successful resolutions out
-                    of {{ total_complaints }} reports.</p>
+                <p class="text-sm text-slate-500 mt-1 italic">Total {{ resolved_complaints }} successful resolutions out of {{ total_complaints }} reports.</p>
             </div>
             <div class="w-full sm:w-72">
                 <div class="flex justify-between text-xs mb-2 font-bold text-primary">
-                    <span>PROGRESS TRACKER</span>
+                    <span class="tracking-wide">PROGRESS</span>
                     <span>{{ resolution_rate }}%</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-5 p-1 shadow-inner">
-                    <div class="bg-primary rounded-full h-3 transition-all duration-1000 ease-out shadow-lg dynamic-width"
-                        data-width="{{ resolution_rate|default:0 }}"></div>
+                <div class="w-full bg-slate-100 rounded-full h-5 p-1 shadow-inner">
+                    <div class="bg-[#002D72] rounded-full h-3 transition-all duration-1000 ease-out shadow-lg"
+                        style="width: {{ resolution_rate|default:0 }}%"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Actionable Insights -->
+        <!-- Actionable Insights banner -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div class="bg-primary-dark rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
-                <div
-                    class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700">
-                </div>
-                <h3 class="text-sm font-bold opacity-70 uppercase tracking-widest mb-3">Priority Area</h3>
+            <div class="navy-gradient-bg rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
+                <h3 class="text-xs font-extrabold opacity-70 uppercase tracking-wider mb-2">Attention Required</h3>
                 <div class="flex items-center gap-4">
-                    <div class="p-3 bg-red-500 rounded-xl">
+                    <div class="p-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold">{% if top_ward %}Ward {{ top_ward }}{% else %}N/A{% endif %}</p>
+                        <p class="text-2xl font-black">{% if top_ward %}Ward {{ top_ward }}{% else %}N/A{% endif %}</p>
                         <p class="text-xs opacity-60">Highest volume of active complaints</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-secondary rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
-                <div
-                    class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full group-hover:scale-125 transition-transform duration-700">
-                </div>
-                <h3 class="text-sm font-bold opacity-70 uppercase tracking-widest mb-3">Top Category</h3>
+            <div class="bg-[#1E3E62] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-5 rounded-full group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
+                <h3 class="text-xs font-extrabold opacity-70 uppercase tracking-wider mb-2">Top Category</h3>
                 <div class="flex items-center gap-4">
-                    <div class="p-3 bg-primary text-white rounded-xl">
+                    <div class="p-3 bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 rounded-xl">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold truncate max-w-[200px]">{% if top_category %}{{ top_category }}{%
-                            else %}N/A{% endif %}</p>
+                        <p class="text-2xl font-black truncate max-w-[200px]">{% if top_category %}{{ top_category }}{% else %}N/A{% endif %}</p>
                         <p class="text-xs opacity-60">Most frequent citizen concern</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECTION: Issues Analytics -->
+        <!-- SECTION: Issues Analytics Charts -->
         <div class="mb-6 flex items-center gap-4 page-break-before">
-            <h2 class="text-xl font-black text-primary-dark uppercase tracking-tighter">Citizen Issues Overview</h2>
-            <div class="flex-grow h-px bg-gray-200"></div>
+            <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">Citizen Issues & Trends</h2>
+            <div class="flex-grow h-px bg-slate-200"></div>
         </div>
+        
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-            <!-- 1. Issues by Ward (bar - 2/3 width) -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+            <!-- 1. Issues by Ward (Interactive) -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-bold text-gray-800">Complaints per Ward</h3>
-                    <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-semibold">Bar Chart</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Complaints per Ward</h3>
+                        <p class="text-xs text-slate-400">Click a bar to filter analytics to that ward</p>
+                    </div>
+                    <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">Interactive</span>
                 </div>
                 <div class="h-72">
                     <canvas id="wardChart"></canvas>
                 </div>
             </div>
 
-            <!-- 2. Issues by Category (doughnut - 1/3 width) -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <!-- 2. Issues by Category -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-bold text-gray-800">Issue Categories</h3>
-                    <span
-                        class="text-xs bg-purple-50 text-purple-600 px-2 py-1 rounded-full font-semibold">Doughnut</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Issue Breakdown</h3>
+                        <p class="text-xs text-slate-400">Submissions by category</p>
+                    </div>
+                    <span class="text-xs bg-purple-50 text-purple-600 px-2 py-1 rounded-full font-bold">Doughnut</span>
                 </div>
                 <div class="h-72">
                     <canvas id="catChart"></canvas>
                 </div>
             </div>
-
-            <!-- 3. Monthly Trend (line - full width) -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-3">
+            
+            <!-- NEW: Resolution Time Tracking Chart -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-bold text-gray-800">6-Month Complaint Submission Trend</h3>
-                    <span class="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full font-semibold">Live
-                        Data</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Average Resolution Speed by Category</h3>
+                        <p class="text-xs text-slate-400">Average duration in days from submission to resolution</p>
+                    </div>
+                    <span class="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full font-bold">Days to Resolve</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="resTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 3. Monthly Trend (Line - 6 Months) -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800">6-Month Submission Trend</h3>
+                    <span class="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full font-bold">Historical</span>
                 </div>
                 <div class="h-64">
                     <canvas id="monthChart"></canvas>
                 </div>
             </div>
+        </div>
 
-            <!-- 6. Citizen Registration Growth (Live) -->
-            <div class="bg-primary-dark p-6 rounded-2xl shadow-xl lg:col-span-3 text-white">
+        <!-- SECTION: Interactive Complaint Density Heatmap Grid -->
+        <div class="mb-6 flex items-center gap-4 page-break-before">
+            <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">Interactive Complaint Density Heatmap</h2>
+            <div class="flex-grow h-px bg-slate-200"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8 overflow-hidden">
+            <div class="mb-4">
+                <h3 class="text-base font-bold text-slate-800">Issue Density Matrix (Ward vs Category)</h3>
+                <p class="text-xs text-slate-400">Heat map distribution. Click any non-zero cell to view and resolve those issues directly on your active docket.</p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse border border-slate-100 text-center">
+                    <thead>
+                        <tr class="bg-slate-50 text-xs font-bold text-slate-500 uppercase">
+                            <th class="p-3 border border-slate-100 text-left">Ward</th>
+                            {% for cat in heatmap_categories %}
+                            <th class="p-3 border border-slate-100 text-center text-[10px]">{{ cat }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for ward_num in heatmap_wards %}
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="p-3 border border-slate-100 text-left font-bold text-slate-700 text-sm">Ward {{ ward_num }}</td>
+                            
+                            {% for val in heatmap_matrix|slice:forloop.counter0|first %}
+                            <!-- Loop logic resolved inside JS below for rendering and styling cells -->
+                            {% endfor %}
+                            
+                            <!-- Dynamic cell population via inline index values -->
+                            {% with outer_index=forloop.counter0 %}
+                                {% for cat_name in heatmap_categories %}
+                                    <td class="p-2 border border-slate-100 text-center font-black text-xs heatmap-cell cursor-pointer"
+                                        id="cell-{{ ward_num }}-{{ forloop.counter0 }}"
+                                        data-ward="{{ ward_num }}"
+                                        data-category="{{ cat_name }}">
+                                        0
+                                    </td>
+                                {% endfor %}
+                            {% endwith %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION: Suggestion Analysis Dashboard -->
+        <div class="mb-6 flex items-center gap-4 page-break-before">
+            <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">Public Suggestion Sentiment & Clustering</h2>
+            <div class="flex-grow h-px bg-slate-200"></div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- 1. Sentiment Distribution -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-base font-bold">Annual Citizen Registration Growth</h3>
-                        <p class="text-xs opacity-60">Monthly new citizen sign-ups over the past 12 months</p>
+                        <h3 class="text-base font-bold text-slate-800">Public Sentiment Ratio</h3>
+                        <p class="text-xs text-slate-400">Emotion analysis of feedback descriptions</p>
                     </div>
-                    <span class="text-xs bg-white/20 text-white px-2 py-1 rounded-full font-semibold">Live Data</span>
+                    <span class="text-xs bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full font-bold">NLP Analytics</span>
                 </div>
                 <div class="h-64">
-                    <canvas id="growthChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION: Suggestions Analytics -->
-        <div class="mb-4 page-break-before">
-            <h2 class="text-lg font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                <span class="w-3 h-3 bg-secondary rounded-full inline-block"></span>
-                Citizen Suggestions Analytics
-            </h2>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- 4. Suggestion Categories (pie - 1/3) -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-bold text-gray-800">Suggestion Categories</h3>
-                    <span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-1 rounded-full font-semibold">Pie
-                        Chart</span>
-                </div>
-                <div class="h-72">
-                    <canvas id="sugCatChart"></canvas>
+                    <canvas id="sentimentChart"></canvas>
                 </div>
             </div>
 
-            <!-- 5. Suggestions per Ward (bar - 2/3) -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+            <!-- 2. Topic Clustering -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-2">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-bold text-gray-800">Suggestions per Ward</h3>
-                    <span class="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded-full font-semibold">Bar
-                        Chart</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Suggestion Topic Clusters</h3>
+                        <p class="text-xs text-slate-400">Keyword-grouped user feedback topics</p>
+                    </div>
+                    <span class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-bold">Topic Modeling</span>
+                </div>
+                <div class="h-64">
+                    <canvas id="topicClusterChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Suggestion Stats per Ward -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 lg:col-span-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-bold text-slate-800">Suggestions per Ward</h3>
+                    <span class="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full font-bold">Distribution</span>
                 </div>
                 <div class="h-72">
                     <canvas id="sugWardChart"></canvas>
@@ -419,92 +457,86 @@
 
         <!-- SECTION: Ward Ranking -->
         <div class="mb-6 flex items-center gap-4 page-break-before">
-            <h2 class="text-xl font-black text-primary-dark uppercase tracking-tighter">Ward Performance Ranking</h2>
-            <div class="flex-grow h-px bg-gray-200"></div>
+            <h2 class="text-lg font-black text-slate-800 uppercase tracking-wide">Ward Performance Ranking</h2>
+            <div class="flex-grow h-px bg-slate-200"></div>
         </div>
-        <!-- Ward Ranking: responsive wrapper -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-
-            <!-- Desktop Table (hidden on small screens) -->
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div class="hidden sm:block overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <table class="min-w-full divide-y divide-slate-100">
+                    <thead class="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <tr>
                             <th class="px-6 py-4 text-left">Ward</th>
-                            <th class="px-6 py-4 text-center">Total</th>
+                            <th class="px-6 py-4 text-center">Total Issues</th>
                             <th class="px-6 py-4 text-center">Resolved</th>
-                            <th class="px-6 py-4 text-center">Active</th>
+                            <th class="px-6 py-4 text-center">Active (Pending/Progress)</th>
                             <th class="px-6 py-4 text-right">Success Rate</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 text-sm">
+                    <tbody class="divide-y divide-slate-100 text-sm">
                         {% for item in ward_performance %}
-                        <tr class="hover:bg-blue-50/30 transition">
-                            <td class="px-6 py-4 font-bold text-gray-900">Ward {{ item.ward }}</td>
+                        <tr class="hover:bg-slate-50/20 transition">
+                            <td class="px-6 py-4 font-bold text-slate-800">Ward {{ item.ward }}</td>
                             <td class="px-6 py-4 text-center font-medium">{{ item.total }}</td>
                             <td class="px-6 py-4 text-center text-green-600 font-bold">{{ item.resolved }}</td>
-                            <td class="px-6 py-4 text-center text-orange-600 font-bold">{{ item.active }}</td>
+                            <td class="px-6 py-4 text-center text-orange-500 font-bold">{{ item.active }}</td>
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <span class="font-bold text-primary">{{ item.rate }}%</span>
-                                    <div class="w-16 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div class="bg-primary h-full dynamic-width"
-                                            data-width="{{ item.rate|default:0 }}"></div>
+                                <div class="flex items-center justify-end gap-2.5">
+                                    <span class="font-extrabold text-[#002D72]">{{ item.rate }}%</span>
+                                    <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
+                                        <div class="bg-[#002D72] h-full" style="width: {{ item.rate|default:0 }}%"></div>
                                     </div>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="px-6 py-10 text-center text-gray-400 italic">No ward data available
-                                yet.</td>
+                            <td colspan="5" class="px-6 py-10 text-center text-slate-400 italic">No ward data available yet.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Mobile Cards (visible only on small screens) -->
-            <div class="sm:hidden divide-y divide-gray-100">
+            <!-- Mobile Cards -->
+            <div class="sm:hidden divide-y divide-slate-50">
                 {% for item in ward_performance %}
                 <div class="p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="font-extrabold text-primary-dark text-base">Ward {{ item.ward }}</span>
-                        <span class="text-xs font-bold px-2 py-1 rounded-full
-                            {% if item.rate >= 60 %}bg-green-100 text-green-700
-                            {% elif item.rate >= 30 %}bg-yellow-100 text-yellow-700
-                            {% else %}bg-red-100 text-red-700{% endif %}">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-extrabold text-slate-800 text-base">Ward {{ item.ward }}</span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full
+                            {% if item.rate >= 60 %}bg-green-50 text-green-700
+                            {% elif item.rate >= 30 %}bg-yellow-50 text-yellow-700
+                            {% else %}bg-red-50 text-red-700{% endif %}">
                             {{ item.rate }}% Success
                         </span>
                     </div>
-                    <div class="w-full bg-gray-100 rounded-full h-2 mb-3">
-                        <div class="bg-primary h-2 rounded-full dynamic-width" data-width="{{ item.rate|default:0 }}">
-                        </div>
+                    <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3">
+                        <div class="bg-[#002D72] h-full rounded-full" style="width: {{ item.rate|default:0 }}%"></div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <p class="font-bold text-gray-900 text-sm">{{ item.total }}</p>
-                            <p class="text-gray-500">Total</p>
+                        <div class="bg-slate-50 rounded-lg p-2">
+                            <p class="font-bold text-slate-800 text-sm">{{ item.total }}</p>
+                            <p class="text-slate-400">Total</p>
                         </div>
                         <div class="bg-green-50 rounded-lg p-2">
                             <p class="font-bold text-green-700 text-sm">{{ item.resolved }}</p>
-                            <p class="text-gray-500">Resolved</p>
+                            <p class="text-slate-400">Resolved</p>
                         </div>
                         <div class="bg-orange-50 rounded-lg p-2">
                             <p class="font-bold text-orange-700 text-sm">{{ item.active }}</p>
-                            <p class="text-gray-500">Active</p>
+                            <p class="text-slate-400">Active</p>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <p class="p-6 text-center text-gray-400 italic">No ward data available yet.</p>
+                <p class="p-6 text-center text-slate-400 italic">No ward data available yet.</p>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Footer note -->
-        <p class="text-center text-xs text-gray-400 mt-4 pb-4">Data refreshes every time this page is loaded &bull;
-            Birnagar Municipality &bull; Mission Clean City</p>
+        <!-- Footer -->
+        <p class="text-center text-xs text-slate-400 mt-6 pb-6">Data refreshes dynamically &bull; Birnagar Municipality &bull; Mission Clean City</p>
     </div>
 </div>
 
@@ -512,186 +544,290 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     (function () {
-        const primaryColor = '#1e3a8a';
-        const secondaryColor = '#facc15';
-        const accentColors = ['#1e3a8a', '#facc15', '#10b981', '#f43f5e', '#8b5cf6', '#f97316', '#06b6d4', '#84cc16'];
-
+        // Theme Colors
+        const primaryColor = '#002D72';
+        const secondaryColor = '#1E3E62';
+        const accentColors = ['#002D72', '#1E3E62', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
+        
         Chart.defaults.font.family = "'Lato', sans-serif";
-        Chart.defaults.font.size = 12;
+        Chart.defaults.font.size = 11;
+        Chart.defaults.font.weight = 'bold';
 
+        // Empty Data Plugin
         const noDataPlugin = {
             id: 'noData',
             afterDraw: (chart) => {
-                const hasData = chart.data.datasets.some(d => d.data && d.data.length > 0);
-                if (!hasData || chart.data.datasets[0].data.length === 0) {
+                const hasData = chart.data.datasets.some(d => d.data && d.data.length > 0 && d.data.some(v => v > 0));
+                if (!hasData) {
                     const { ctx, width, height } = chart;
                     chart.clear();
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.font = '14px Lato, sans-serif';
-                    ctx.fillStyle = '#9ca3af';
-                    ctx.fillText('No data available yet', width / 2, height / 2);
+                    ctx.font = '13px Lato, sans-serif';
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText('No matching data available', width / 2, height / 2);
                     ctx.restore();
                 }
             }
         };
 
-        // 1. Ward Chart
-        new Chart(document.getElementById('wardChart'), {
-            type: 'bar',
-            data: {
-                labels: JSON.parse('{{ chart_ward_labels|escapejs }}'),
-                datasets: [{
-                    label: 'Complaints',
-                    data: JSON.parse('{{ chart_ward_data|escapejs }}'),
-                    backgroundColor: accentColors,
-                    borderRadius: 8,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f3f4f6' } },
-                    x: { grid: { display: false } }
-                }
-            },
-            plugins: [noDataPlugin]
-        });
+        // Drilldown helper
+        function filterByWard(wardValue) {
+            const form = document.getElementById('analytics-filter-form');
+            const selector = document.getElementById('ward-selector');
+            selector.value = wardValue;
+            form.submit();
+        }
+
+        // 1. Ward Chart (Complaints per Ward)
+        const wardChartCanvas = document.getElementById('wardChart');
+        if (wardChartCanvas) {
+            const wardLabels = JSON.parse('{{ chart_ward_labels|escapejs }}');
+            const wardData = JSON.parse('{{ chart_ward_data|escapejs }}');
+            const wChart = new Chart(wardChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: wardLabels,
+                    datasets: [{
+                        label: 'Complaints',
+                        data: wardData,
+                        backgroundColor: primaryColor,
+                        borderRadius: 6,
+                        hoverBackgroundColor: '#C75000'
+                    }]
+                },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    },
+                    onClick: (evt, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const idx = activeElements[0].index;
+                            const label = wardLabels[idx];
+                            // Parse Ward number out of "Ward X" label
+                            const match = label.match(/\d+/);
+                            if (match) {
+                                filterByWard(match[0]);
+                            }
+                        }
+                    }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
 
         // 2. Category Doughnut
-        new Chart(document.getElementById('catChart'), {
-            type: 'doughnut',
-            data: {
-                labels: JSON.parse('{{ chart_cat_labels|escapejs }}'),
-                datasets: [{
-                    data: JSON.parse('{{ chart_cat_data|escapejs }}'),
-                    backgroundColor: accentColors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }
-            },
-            plugins: [noDataPlugin]
-        });
-
-        // 3. Monthly Trend
-        new Chart(document.getElementById('monthChart'), {
-            type: 'line',
-            data: {
-                labels: JSON.parse('{{ chart_month_labels|escapejs }}'),
-                datasets: [{
-                    label: 'Complaints Submitted',
-                    data: JSON.parse('{{ chart_month_data|escapejs }}'),
-                    borderColor: primaryColor,
-                    backgroundColor: 'rgba(30,58,138,0.08)',
-                    fill: true, tension: 0.45,
-                    pointBackgroundColor: primaryColor,
-                    pointRadius: 5, pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f3f4f6' } },
-                    x: { grid: { display: false } }
-                }
-            },
-            plugins: [noDataPlugin]
-        });
-
-        // 4. Suggestion Category Pie
-        new Chart(document.getElementById('sugCatChart'), {
-            type: 'pie',
-            data: {
-                labels: JSON.parse('{{ chart_sug_cat_labels|escapejs }}'),
-                datasets: [{
-                    data: JSON.parse('{{ chart_sug_cat_data|escapejs }}'),
-                    backgroundColor: accentColors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } }
-            },
-            plugins: [noDataPlugin]
-        });
-
-        // 6. Citizen Registration Growth (Live Data)
-        new Chart(document.getElementById('growthChart'), {
-            type: 'line',
-            data: {
-                labels: JSON.parse('{{ chart_growth_labels|escapejs }}'),
-                datasets: [{
-                    label: 'New Citizens Registered',
-                    data: JSON.parse('{{ chart_growth_data|escapejs }}'),
-                    borderColor: '#facc15',
-                    backgroundColor: 'rgba(250, 204, 21, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#facc15',
-                    pointRadius: 4,
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#fff' } }
+        const catChartCanvas = document.getElementById('catChart');
+        if (catChartCanvas) {
+            new Chart(catChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: JSON.parse('{{ chart_cat_labels|escapejs }}'),
+                    datasets: [{
+                        data: JSON.parse('{{ chart_cat_data|escapejs }}'),
+                        backgroundColor: accentColors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, color: 'rgba(255,255,255,0.7)' },
-                        grid: { color: 'rgba(255,255,255,0.1)' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: 'rgba(255,255,255,0.7)' }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } } }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // 3. Resolution Time Tracking Chart
+        const resTimeCanvas = document.getElementById('resTimeChart');
+        if (resTimeCanvas) {
+            new Chart(resTimeCanvas, {
+                type: 'bar',
+                data: {
+                    labels: JSON.parse('{{ res_time_labels_js|escapejs }}'),
+                    datasets: [{
+                        label: 'Avg Days to Resolve',
+                        data: JSON.parse('{{ res_time_data_js|escapejs }}'),
+                        backgroundColor: '#C75000',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: { display: true, text: 'Days' } },
+                        y: { grid: { display: false } }
+                    }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // 4. Monthly Trend Line
+        const monthCanvas = document.getElementById('monthChart');
+        if (monthCanvas) {
+            new Chart(monthCanvas, {
+                type: 'line',
+                data: {
+                    labels: JSON.parse('{{ chart_month_labels|escapejs }}'),
+                    datasets: [{
+                        label: 'Complaints',
+                        data: JSON.parse('{{ chart_month_data|escapejs }}'),
+                        borderColor: primaryColor,
+                        backgroundColor: 'rgba(0, 45, 114, 0.05)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: primaryColor,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // 5. Suggestion Sentiment Chart
+        const sentimentCanvas = document.getElementById('sentimentChart');
+        if (sentimentCanvas) {
+            new Chart(sentimentCanvas, {
+                type: 'pie',
+                data: {
+                    labels: JSON.parse('{{ sentiment_labels_js|escapejs }}'),
+                    datasets: [{
+                        data: JSON.parse('{{ sentiment_data_js|escapejs }}'),
+                        backgroundColor: ['#10b981', '#94a3b8', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8 } } }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // 6. Topic Clustering Chart
+        const topicCanvas = document.getElementById('topicClusterChart');
+        if (topicCanvas) {
+            new Chart(topicCanvas, {
+                type: 'bar',
+                data: {
+                    labels: JSON.parse('{{ topic_labels_js|escapejs }}'),
+                    datasets: [{
+                        label: 'Suggestions',
+                        data: JSON.parse('{{ topic_data_js|escapejs }}'),
+                        backgroundColor: '#1E3E62',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // 7. Suggestion Ward Chart
+        const sugWardCanvas = document.getElementById('sugWardChart');
+        if (sugWardCanvas) {
+            new Chart(sugWardCanvas, {
+                type: 'bar',
+                data: {
+                    labels: JSON.parse('{{ chart_sug_ward_labels|escapejs }}'),
+                    datasets: [{
+                        data: JSON.parse('{{ chart_sug_ward_data|escapejs }}'),
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                },
+                plugins: [noDataPlugin]
+            });
+        }
+
+        // --- HEATMAP CELL DATA & STYLING ---
+        const heatmapMatrix = JSON.parse('{{ heatmap_matrix_js|escapejs }}');
+        
+        // Loop over matrix and populate values
+        for (let wIdx = 0; wIdx < 14; wIdx++) {
+            const wardNum = wIdx + 1;
+            const rowData = heatmapMatrix[wIdx];
+            for (let cIdx = 0; cIdx < rowData.length; cIdx++) {
+                const val = rowData[cIdx];
+                const cell = document.getElementById(`cell-${wardNum}-${cIdx}`);
+                if (cell) {
+                    cell.innerText = val;
+                    cell.setAttribute('data-val', val);
+                    
+                    // Style cell background according to density
+                    let opacity = 0;
+                    if (val > 0) {
+                        opacity = Math.min(0.08 + (val * 0.12), 0.75);
+                    }
+                    cell.style.backgroundColor = `rgba(0, 45, 114, ${opacity})`;
+                    if (opacity > 0.4) {
+                        cell.style.color = '#ffffff';
+                    } else {
+                        cell.style.color = '#1e293b';
                     }
                 }
-            },
-            plugins: [noDataPlugin]
-        });
+            }
+        }
 
-        // 5. Suggestion Ward Bar
-        new Chart(document.getElementById('sugWardChart'), {
-            type: 'bar',
-            data: {
-                labels: JSON.parse('{{ chart_sug_ward_labels|escapejs }}'),
-                datasets: [{
-                    label: 'Suggestions',
-                    data: JSON.parse('{{ chart_sug_ward_data|escapejs }}'),
-                    backgroundColor: secondaryColor,
-                    borderRadius: 8,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f3f4f6' } },
-                    x: { grid: { display: false } }
-                }
-            },
-            plugins: [noDataPlugin]
-        });
-
-        // Apply dynamic widths to progress bars (to avoid IDE CSS linting errors)
-        document.querySelectorAll('.dynamic-width').forEach(el => {
-            const width = el.getAttribute('data-width') || '0';
-            el.style.width = width + '%';
+        // Add cell click listeners for filter redirection
+        document.querySelectorAll('.heatmap-cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                const val = parseInt(cell.getAttribute('data-val') || '0');
+                if (val === 0) return; // ignore empty cells
+                
+                const ward = cell.getAttribute('data-ward');
+                const category = cell.getAttribute('data-category');
+                
+                // Map label back to CategoryChoices values
+                let catVal = 'OTHER';
+                if (category.includes('Garbage')) catVal = 'GARBAGE';
+                else if (category.includes('Roads')) catVal = 'ROADS';
+                else if (category.includes('Drainage')) catVal = 'DRAINAGE';
+                else if (category.includes('Streetlights')) catVal = 'STREETLIGHTS';
+                else if (category.includes('Water')) catVal = 'WATER';
+                else if (category.includes('Health')) catVal = 'HEALTH';
+                
+                // Redirect to admin_dashboard with ward and category filters
+                const url = `{% url 'admin_dashboard' %}?filter_ward=${ward}&filter_category=${catVal}`;
+                window.location.href = url;
+            });
         });
 
     })();

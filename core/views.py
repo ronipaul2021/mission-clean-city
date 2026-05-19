@@ -1705,6 +1705,7 @@ def admin_suggestions(request):
 
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_analytics(request):
     if request.user.role != User.Role.ADMIN:
         return error_403(request)
@@ -1721,6 +1722,55 @@ def admin_analytics(request):
 
     total_suggestions = Suggestion.objects.count()
 
+    # Redesign Analytics Helpers
+    from .utils import (
+        get_avg_resolution_times,
+        get_complaint_density_heatmap,
+        get_suggestion_sentiment_data,
+        get_suggestion_topics_data,
+        apply_custom_filters,
+        get_timeframe_filters,
+    )
+    import json
+
+    avg_res_times = get_avg_resolution_times(timeframe, start_date, end_date, ward)
+    density_heatmap = get_complaint_density_heatmap(timeframe, start_date, end_date, ward)
+    sentiment_data = get_suggestion_sentiment_data(timeframe, start_date, end_date, ward)
+    topics_data = get_suggestion_topics_data(timeframe, start_date, end_date, ward)
+
+    # Serialize for Chart.js
+    res_time_labels_js = json.dumps(avg_res_times['res_time_labels'])
+    res_time_data_js = json.dumps(avg_res_times['res_time_data'])
+
+    heatmap_wards_js = json.dumps(density_heatmap['heatmap_wards'])
+    heatmap_categories_js = json.dumps(density_heatmap['heatmap_categories'])
+    heatmap_matrix_js = json.dumps(density_heatmap['heatmap_matrix'])
+
+    sentiment_labels_js = json.dumps(sentiment_data['sentiment_labels'])
+    sentiment_data_js = json.dumps(sentiment_data['sentiment_data'])
+
+    topic_labels_js = json.dumps(topics_data['topic_labels'])
+    topic_data_js = json.dumps(topics_data['topic_data'])
+
+    # Compute a global average resolution time KPI across all resolved issues
+    from .models import Complaint
+    resolved_complaints_qs = Complaint.objects.filter(status=Complaint.Status.RESOLVED, resolved_at__isnull=False)
+    if timeframe == 'custom':
+        resolved_complaints_qs = apply_custom_filters(resolved_complaints_qs, start_date, end_date, ward)
+    else:
+        start_dt, _, _ = get_timeframe_filters(timeframe)
+        if start_dt:
+            resolved_complaints_qs = resolved_complaints_qs.filter(submitted_at__gte=start_dt)
+        if ward:
+            resolved_complaints_qs = resolved_complaints_qs.filter(ward_number=ward)
+
+    total_dur_days = 0.0
+    resolved_count = resolved_complaints_qs.count()
+    for item in resolved_complaints_qs:
+        if item.resolved_at and item.submitted_at:
+            total_dur_days += (item.resolved_at - item.submitted_at).total_seconds() / 86400.0
+    global_avg_res_time = round(total_dur_days / resolved_count, 1) if resolved_count > 0 else 0.0
+
     return render(request, 'admin_analytics.html', {
         'admin_name':          request.user.name,
         'admin_employee_id':   request.user.employee_id,
@@ -1729,6 +1779,25 @@ def admin_analytics(request):
         'start_date':          start_date,
         'end_date':            end_date,
         'selected_ward':       ward,
+        'global_avg_res_time': global_avg_res_time,
+
+        # Serialized Chart.js variables
+        'res_time_labels_js': res_time_labels_js,
+        'res_time_data_js': res_time_data_js,
+
+        'heatmap_wards_js': heatmap_wards_js,
+        'heatmap_categories_js': heatmap_categories_js,
+        'heatmap_matrix_js': heatmap_matrix_js,
+        'heatmap_wards': density_heatmap['heatmap_wards'],
+        'heatmap_categories': density_heatmap['heatmap_categories'],
+        'heatmap_matrix': density_heatmap['heatmap_matrix'],
+
+        'sentiment_labels_js': sentiment_labels_js,
+        'sentiment_data_js': sentiment_data_js,
+
+        'topic_labels_js': topic_labels_js,
+        'topic_data_js': topic_data_js,
+
         **kpis,
         **chart_data,
         **sug_charts,

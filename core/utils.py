@@ -665,3 +665,199 @@ def auto_crop_face(image_file):
     except Exception as e:
         logger.error("Face crop error: %s", e)
         return validate_and_compress_image(image_file, max_kb=100, require_square=False)
+
+
+def get_avg_resolution_times(timeframe='all', start_date='', end_date='', ward=''):
+    """
+    Calculate average resolution time in days per category for resolved issues.
+    """
+    from .models import Complaint
+    start_dt, _, _ = get_timeframe_filters(timeframe)
+    qs = Complaint.objects.filter(status=Complaint.Status.RESOLVED, resolved_at__isnull=False)
+    if timeframe == 'custom':
+        qs = apply_custom_filters(qs, start_date, end_date, ward)
+    else:
+        if start_dt:
+            qs = qs.filter(submitted_at__gte=start_dt)
+        if ward:
+            qs = qs.filter(ward_number=ward)
+
+    category_times = {}
+    for category, label in Complaint.CategoryChoices.choices:
+        cat_qs = qs.filter(category=category)
+        durations = []
+        for item in cat_qs:
+            if item.resolved_at and item.submitted_at:
+                diff = item.resolved_at - item.submitted_at
+                durations.append(diff.total_seconds() / 86400.0)  # in days
+        if durations:
+            avg_days = sum(durations) / len(durations)
+            category_times[label] = round(avg_days, 1)
+        else:
+            category_times[label] = 0.0
+
+    return {
+        'res_time_labels': list(category_times.keys()),
+        'res_time_data': list(category_times.values())
+    }
+
+
+def get_complaint_density_heatmap(timeframe='all', start_date='', end_date='', ward=''):
+    """
+    Generate complaint count matrix for Ward vs Category heatmap representation.
+    """
+    from .models import Complaint
+    start_dt, _, _ = get_timeframe_filters(timeframe)
+    qs = Complaint.objects.all()
+    if timeframe == 'custom':
+        qs = apply_custom_filters(qs, start_date, end_date, ward)
+    else:
+        if start_dt:
+            qs = qs.filter(submitted_at__gte=start_dt)
+        if ward:
+            qs = qs.filter(ward_number=ward)
+
+    categories = Complaint.CategoryChoices.choices
+    wards = list(range(1, 15))
+
+    counts = qs.values('ward_number', 'category').annotate(count=Count('id'))
+    matrix_dict = {(w, c): 0 for w in wards for c, _ in categories}
+    for row in counts:
+        w = row['ward_number']
+        c = row['category']
+        if (w, c) in matrix_dict:
+            matrix_dict[(w, c)] = row['count']
+
+    matrix = []
+    for w in wards:
+        row_data = []
+        for c, _ in categories:
+            row_data.append(matrix_dict.get((w, c), 0))
+        matrix.append(row_data)
+
+    return {
+        'heatmap_wards': wards,
+        'heatmap_categories': [label for _, label in categories],
+        'heatmap_matrix': matrix
+    }
+
+
+def get_suggestion_sentiment_data(timeframe='all', start_date='', end_date='', ward=''):
+    """
+    Categorize suggestions into Positive/Neutral/Negative based on description sentiment keywords.
+    """
+    from .models import Suggestion
+    start_dt, _, _ = get_timeframe_filters(timeframe)
+    qs = Suggestion.objects.all()
+    if timeframe == 'custom':
+        qs = apply_custom_filters(qs, start_date, end_date, ward, ward_field='target_ward_number')
+    else:
+        if start_dt:
+            qs = qs.filter(submitted_at__gte=start_dt)
+        if ward:
+            qs = qs.filter(target_ward_number=ward)
+
+    pos_words = {"good", "great", "excellent", "happy", "clean", "satisfied", "perfect", "love", "thanks", "helpful", "well", "appreciate", "beautiful", "smooth", "improved", "best", "nice"}
+    neg_words = {"bad", "worst", "broken", "dirty", "smelly", "overflow", "poor", "dark", "danger", "hazard", "unhappy", "problem", "issue", "clogged", "failure", "unsafe", "neglected"}
+
+    pos_count = 0
+    neu_count = 0
+    neg_count = 0
+
+    for sug in qs:
+        text = (sug.description or "").lower()
+        score = 0
+        words = text.split()
+        for w in words:
+            w_clean = "".join(c for c in w if c.isalnum())
+            if w_clean in pos_words:
+                score += 1
+            elif w_clean in neg_words:
+                score -= 1
+        if score > 0:
+            pos_count += 1
+        elif score < 0:
+            neg_count += 1
+        else:
+            neu_count += 1
+
+    return {
+        'sentiment_labels': ['Positive', 'Neutral', 'Negative'],
+        'sentiment_data': [pos_count, neu_count, neg_count]
+    }
+
+
+def get_suggestion_topics_data(timeframe='all', start_date='', end_date='', ward=''):
+    """
+    Cluster suggestions based on topic keywords and category tags.
+    """
+    from .models import Suggestion
+    start_dt, _, _ = get_timeframe_filters(timeframe)
+    qs = Suggestion.objects.all()
+    if timeframe == 'custom':
+        qs = apply_custom_filters(qs, start_date, end_date, ward, ward_field='target_ward_number')
+    else:
+        if start_dt:
+            qs = qs.filter(submitted_at__gte=start_dt)
+        if ward:
+            qs = qs.filter(target_ward_number=ward)
+
+    topics = {
+        'Waste & Garbage': 0,
+        'Drainage & Sewerage': 0,
+        'Roads & Infrastructure': 0,
+        'Streetlights': 0,
+        'Drinking Water': 0,
+        'Public Health': 0,
+        'Parks & Greenery': 0,
+        'Other': 0
+    }
+
+    topic_keywords = {
+        'Waste & Garbage': ["garbage", "waste", "solid", "bin", "dump", "litter", "trash", "rubbish"],
+        'Drainage & Sewerage': ["drain", "waterlogging", "sewer", "flooding", "gutter", "block"],
+        'Roads & Infrastructure': ["road", "pothole", "street", "pavement", "crack", "path", "bridge"],
+        'Streetlights': ["light", "lamp", "dark", "bulb", "electricity", "wire", "pole"],
+        'Drinking Water': ["water", "pipe", "drinking", "supply", "tap", "leak"],
+        'Public Health': ["health", "hygiene", "sanitation", "toilet", "mosquito", "spray", "cleanliness", "medical"],
+        'Parks & Greenery': ["park", "garden", "tree", "plant", "green", "bench", "play", "playground"]
+    }
+
+    for sug in qs:
+        text = (sug.description or "").lower()
+        matched = False
+        for topic, keywords in topic_keywords.items():
+            if any(kw in text for kw in keywords):
+                topics[topic] += 1
+                matched = True
+                break
+        if not matched:
+            field_cat = sug.suggestion_category
+            if field_cat == Suggestion.CategoryChoices.GARBAGE:
+                topics['Waste & Garbage'] += 1
+            elif field_cat == Suggestion.CategoryChoices.DRAINAGE:
+                topics['Drainage & Sewerage'] += 1
+            elif field_cat == Suggestion.CategoryChoices.ROADS:
+                topics['Roads & Infrastructure'] += 1
+            elif field_cat == Suggestion.CategoryChoices.STREETLIGHTS:
+                topics['Streetlights'] += 1
+            elif field_cat == Suggestion.CategoryChoices.WATER:
+                topics['Drinking Water'] += 1
+            elif field_cat == Suggestion.CategoryChoices.HEALTH:
+                topics['Public Health'] += 1
+            elif field_cat == Suggestion.CategoryChoices.PARKS:
+                topics['Parks & Greenery'] += 1
+            else:
+                topics['Other'] += 1
+
+    labels = []
+    data = []
+    for label, count in topics.items():
+        labels.append(label)
+        data.append(count)
+
+    return {
+        'topic_labels': labels,
+        'topic_data': data
+    }
+
