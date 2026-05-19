@@ -27,6 +27,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_control
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -162,6 +163,7 @@ def about(request):
 
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def suggestions(request):
     if request.user.role == User.Role.ADMIN:
         messages.error(request, "Admins cannot use the suggestion box.")
@@ -901,6 +903,7 @@ def change_password(request):
 # ==============================================================================
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def profile_edit(request):
     """
     Allows a logged-in citizen to update their email, address, ward number,
@@ -1031,6 +1034,7 @@ def verify_email_update(request):
 
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_profile_edit(request):
     """
     Allows a logged-in admin to update their name and email.
@@ -1134,6 +1138,7 @@ def admin_verify_email_update(request):
 # ==============================================================================
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def submit_problem(request):
     if request.user.role != User.Role.CITIZEN:
         return error_403(request)
@@ -1310,6 +1315,7 @@ def ai_assist_description(request):
 # 3. DASHBOARDS & TRACKING
 # ==============================================================================
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def citizen_tracking(request):
     complaint = None
     if request.method == 'GET' and 'problem_id' in request.GET:
@@ -1371,6 +1377,7 @@ def citizen_complaint_detail(request, complaint_id):
 
 
 @login_required
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_dashboard(request):
     if request.user.role != User.Role.ADMIN:
         messages.error(request, "Unauthorized access. Admins only.")
