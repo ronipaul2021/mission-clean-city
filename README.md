@@ -203,11 +203,11 @@ Run the test suite using:
 python manage.py test
 ```
 
-All 12 critical integrations should pass with `OK`:
+All 19 critical integrations should pass with `OK`:
 ```text
 System check identified no issues (0 silenced).
 Creating test database for alias 'default'...
-Ran 12 tests in 7.12s
+Ran 19 tests in 9.53s
 OK
 Destroying test database for alias 'default'...
 ```
