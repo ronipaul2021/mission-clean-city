@@ -1098,6 +1098,14 @@
             });
         })();
     </script>
+    <script>
+        // Disable Back-Forward Cache (bfcache) globally to prevent secure page restoration after logout.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload(true);
+            }
+        });
+    </script>
 </body>
 
 </html>

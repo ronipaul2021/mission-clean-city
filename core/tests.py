@@ -306,3 +306,43 @@ class CitizenRegistrationTestCase(TestCase):
         # Should redirect to OTP verification page ('verify_otp')
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('verify_otp'), response.url)
+
+
+class LoginAttemptsTestCase(TestCase):
+    def test_citizen_login_empty_credentials(self):
+        """Test that submitting empty credentials does not decrement login attempts."""
+        response = self.client.post(reverse('citizen_login'), {
+            'mobile_number': '',
+            'password': ''
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('citizen_login'))
+        self.assertNotIn('login_attempts', self.client.session)
+
+    def test_admin_login_empty_credentials(self):
+        """Test that submitting empty credentials does not decrement admin login attempts."""
+        response = self.client.post(reverse('admin_login'), {
+            'employee_id': '',
+            'password': ''
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('admin_login'))
+        self.assertNotIn('admin_attempts', self.client.session)
+
+    def test_citizen_login_failed_attempt_increments(self):
+        """Test that incorrect credentials increment login attempts."""
+        response = self.client.post(reverse('citizen_login'), {
+            'mobile_number': '1234567890',
+            'password': 'WrongPassword'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.session.get('login_attempts'), 1)
+
+    def test_admin_login_failed_attempt_increments(self):
+        """Test that incorrect admin credentials increment admin attempts."""
+        response = self.client.post(reverse('admin_login'), {
+            'employee_id': 'BM-EMP-9999',
+            'password': 'WrongPassword'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.session.get('admin_attempts'), 1)

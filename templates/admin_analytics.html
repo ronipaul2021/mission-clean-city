@@ -258,8 +258,9 @@
                     <span>{{ resolution_rate }}%</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-5 p-1 shadow-inner">
-                    <div class="bg-[#002D72] rounded-full h-3 transition-all duration-1000 ease-out shadow-lg"
-                        style="width: {{ resolution_rate|default:0 }}%"></div>
+                    <div class="bg-[#002D72] rounded-full h-3 transition-all duration-1000 ease-out shadow-lg progress-bar-fill"
+                        data-width="{{ resolution_rate|default:0 }}"
+                        style="width: 0%"></div>
                 </div>
             </div>
         </div>
@@ -484,7 +485,7 @@
                                 <div class="flex items-center justify-end gap-2.5">
                                     <span class="font-extrabold text-[#002D72]">{{ item.rate }}%</span>
                                     <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-                                        <div class="bg-[#002D72] h-full" style="width: {{ item.rate|default:0 }}%"></div>
+                                        <div class="bg-[#002D72] h-full progress-bar-fill" data-width="{{ item.rate|default:0 }}" style="width: 0%"></div>
                                     </div>
                                 </div>
                             </td>
@@ -512,7 +513,7 @@
                         </span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-1.5 mb-3">
-                        <div class="bg-[#002D72] h-full rounded-full" style="width: {{ item.rate|default:0 }}%"></div>
+                        <div class="bg-[#002D72] h-full rounded-full progress-bar-fill" data-width="{{ item.rate|default:0 }}" style="width: 0%"></div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center text-xs">
                         <div class="bg-slate-50 rounded-lg p-2">
@@ -857,6 +858,12 @@
                 const url = `{% url 'admin_dashboard' %}?filter_ward=${ward}&filter_category=${catVal}`;
                 window.location.href = url;
             });
+        });
+
+        // Initialize dynamic progress bar widths to avoid CSS parser issues in IDEs
+        document.querySelectorAll('.progress-bar-fill').forEach(el => {
+            const width = el.getAttribute('data-width') || '0';
+            el.style.width = width + '%';
         });
 
     })();

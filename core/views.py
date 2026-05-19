@@ -453,8 +453,13 @@ def citizen_login(request):
             messages.error(request, f"Too many failed attempts. Please wait {remaining} minute(s) before trying again.")
             return redirect('citizen_login')
 
-        mobile   = request.POST.get('mobile_number', '')
+        mobile   = request.POST.get('mobile_number', '').strip()
         password = request.POST.get('password', '')
+
+        if not mobile or not password:
+            messages.error(request, "Please enter both mobile number and password.")
+            return redirect('citizen_login')
+
         user     = authenticate(request, username=mobile, password=password)
         if user is not None and user.role == User.Role.CITIZEN:
             # Successful login — clear counters
@@ -846,8 +851,13 @@ def admin_login(request):
             messages.error(request, f"Too many failed attempts. Please wait {remaining} minute(s) before trying again.")
             return redirect('admin_login')
 
-        emp_id   = request.POST.get('employee_id', '')
+        emp_id   = request.POST.get('employee_id', '').strip()
         password = request.POST.get('password', '')
+
+        if not emp_id or not password:
+            messages.error(request, "Please enter both Employee ID and password.")
+            return redirect('admin_login')
+
         user     = authenticate(request, username=emp_id, password=password)
         if user is not None and user.role == User.Role.ADMIN:
             # Successful login — clear counters

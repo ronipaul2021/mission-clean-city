@@ -1,140 +1,231 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-primary-dark">
-            Citizen Registration
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-            Already registered?
-            <a href="{% url 'citizen_login' %}" class="font-medium text-primary hover:text-secondary transition-colors">
-                Sign in here
-            </a>
-        </p>
+<div class="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-2xl">
+        <!-- Municipality Header Info -->
+        <div class="text-center mb-8">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm mb-4">
+                🌱 Clean & Green City Initiative
+            </span>
+            <h2 class="text-3xl font-extrabold text-primary-dark tracking-tight">
+                Citizen Registration
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Already registered?
+                <a href="{% url 'citizen_login' %}" class="font-semibold text-secondary hover:text-orange-700 underline transition-colors">
+                    Sign in here
+                </a>
+            </p>
+        </div>
     </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
-            <form class="space-y-6" action="{% url 'citizen_register' %}" method="POST" enctype="multipart/form-data">
+    <div class="sm:mx-auto sm:w-full sm:max-w-2xl">
+        <div class="glass bg-white/95 py-8 px-6 sm:px-10 shadow-2xl rounded-3xl border border-gray-100">
+            <!-- Step Navigation Progress Bar -->
+            <div class="mb-10 relative">
+                <!-- Line background -->
+                <div class="absolute left-0 top-5 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full z-0"></div>
+                <!-- Active line fill -->
+                <div id="progress-bar" class="absolute left-0 top-5 -translate-y-1/2 h-1 bg-gradient-to-r from-primary to-secondary rounded-full z-0 transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+                
+                <div class="flex items-center justify-between relative z-10">
+                    <!-- Step 1 Indicator -->
+                    <div class="step-indicator flex flex-col items-center cursor-pointer group" onclick="goToStep(1)">
+                        <div id="step-circle-1" class="w-10 h-10 rounded-full bg-primary text-white border-4 border-white flex items-center justify-center font-bold shadow-lg transition-all duration-300 transform scale-110 ring-4 ring-primary/10">
+                            1
+                        </div>
+                        <span id="step-label-1" class="mt-2 text-[11px] sm:text-xs font-black text-primary-dark transition-all duration-300">Basic Info</span>
+                    </div>
+
+                    <!-- Step 2 Indicator -->
+                    <div class="step-indicator flex flex-col items-center cursor-pointer group" onclick="goToStep(2)">
+                        <div id="step-circle-2" class="w-10 h-10 rounded-full bg-white text-gray-400 border-4 border-gray-50 flex items-center justify-center font-bold shadow-md transition-all duration-300">
+                            2
+                        </div>
+                        <span id="step-label-2" class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-400 transition-all duration-300">Residency</span>
+                    </div>
+
+                    <!-- Step 3 Indicator -->
+                    <div class="step-indicator flex flex-col items-center cursor-pointer group" onclick="goToStep(3)">
+                        <div id="step-circle-3" class="w-10 h-10 rounded-full bg-white text-gray-400 border-4 border-gray-50 flex items-center justify-center font-bold shadow-md transition-all duration-300">
+                            3
+                        </div>
+                        <span id="step-label-3" class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-400 transition-all duration-300">Security</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="registration-form" class="space-y-6" action="{% url 'citizen_register' %}" method="POST" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
 
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name (As per Aadhaar)
-                        *</label>
-                    <div class="mt-1">
-                        <input id="name" name="name" type="text" required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address *</label>
-                    <div class="mt-1">
-                        <input id="email" name="email" type="email" required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="mobile_number" class="block text-sm font-medium text-gray-700">Mobile Number *</label>
-                    <div class="mt-1">
-                        <input id="mobile_number" name="mobile_number" type="tel" required pattern="\d{10}"
-                            title="Please enter exactly 10 digits" maxlength="10" minlength="10"
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number *</label>
-                        <div class="mt-1">
-                            <input id="aadhaar" name="aadhaar" type="text" required pattern="\d{12}"
-                                title="Please enter exactly 12 digits" maxlength="12" minlength="12"
-                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                        </div>
-                        <p class="mt-1 text-xs text-gray-500">Securely encrypted at rest.</p>
+                <!-- STEP 1: CONTACT & BASIC INFO -->
+                <div id="step-pane-1" class="step-pane space-y-6 animate-fade-in">
+                    <div class="border-b border-gray-100 pb-3">
+                        <h3 class="text-lg font-bold text-gray-900">Step 1: Contact Information</h3>
+                        <p class="text-xs text-gray-500">Provide your basic identity and contact details.</p>
                     </div>
 
                     <div>
-                        <label for="aadhaar_card_document" class="block text-sm font-medium text-gray-700">Aadhaar Document Upload *</label>
-                        <div class="mt-1">
-                            <input id="aadhaar_card_document" name="aadhaar_card_document" type="file" accept=".jpg,.jpeg" required
-                                onchange="validateAadhaarDocSize(this)"
-                                class="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
+                        <label for="name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name (As per Aadhaar) *</label>
+                        <div class="mt-1.5 relative">
+                            <input id="name" name="name" type="text" required placeholder="John Doe"
+                                class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
                         </div>
-                        <p id="aadhaar-doc-error" class="mt-1 text-xs text-red-600 hidden font-bold">File must be JPG/JPEG and under 100KB!</p>
-                        <p class="mt-1 text-xs text-gray-500">Must be a <b>JPG or JPEG</b> under 100KB.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="email" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Email Address *</label>
+                            <div class="mt-1.5">
+                                <input id="email" name="email" type="email" required placeholder="john@example.com"
+                                    class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="mobile_number" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Mobile Number *</label>
+                            <div class="mt-1.5">
+                                <input id="mobile_number" name="mobile_number" type="tel" required pattern="\d{10}"
+                                    title="Please enter exactly 10 digits" maxlength="10" minlength="10" placeholder="9876543210"
+                                    class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label for="address" class="block text-sm font-medium text-gray-700">Complete Address (as per
-                        Aadhaar) *</label>
-                    <div class="mt-1">
-                        <textarea id="address" name="address" required rows="2"
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
+                <!-- STEP 2: RESIDENTIAL & WARD INFO -->
+                <div id="step-pane-2" class="step-pane space-y-6 hidden animate-fade-in">
+                    <div class="border-b border-gray-100 pb-3">
+                        <h3 class="text-lg font-bold text-gray-900">Step 2: Municipal Residency</h3>
+                        <p class="text-xs text-gray-500">Provide details on your ward location and residential address.</p>
+                    </div>
+
+                    <div>
+                        <label for="ward_number" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Ward Number *</label>
+                        <div class="mt-1.5">
+                            <select id="ward_number" name="ward_number" required
+                                class="block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200 border">
+                                <option value="">Select Ward</option>
+                                {% for i in '123456789'|make_list %}
+                                <option value="{{ i }}">Ward {{ i }}</option>
+                                {% endfor %}
+                                <option value="10">Ward 10</option>
+                                <option value="11">Ward 11</option>
+                                <option value="12">Ward 12</option>
+                                <option value="13">Ward 13</option>
+                                <option value="14">Ward 14</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="address" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Complete Address (as per Aadhaar) *</label>
+                        <div class="mt-1.5">
+                            <textarea id="address" name="address" required rows="3" placeholder="Enter your full residential address..."
+                                class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label for="ward_number" class="block text-sm font-medium text-gray-700">Ward Number *</label>
-                    <div class="mt-1">
-                        <select id="ward_number" name="ward_number" required
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md border">
-                            <option value="">Select Ward</option>
-                            {% for i in '123456789'|make_list %}
-                            <option value="{{ i }}">Ward {{ i }}</option>
-                            {% endfor %}
-                            <option value="10">Ward 10</option>
-                            <option value="11">Ward 11</option>
-                            <option value="12">Ward 12</option>
-                            <option value="13">Ward 13</option>
-                            <option value="14">Ward 14</option>
-                        </select>
+                <!-- STEP 3: IDENTIFICATION & SECURITY -->
+                <div id="step-pane-3" class="step-pane space-y-6 hidden animate-fade-in">
+                    <div class="border-b border-gray-100 pb-3">
+                        <h3 class="text-lg font-bold text-gray-900">Step 3: Verification & Security</h3>
+                        <p class="text-xs text-gray-500">Provide official documentation and create your password.</p>
                     </div>
+
+                    <!-- Aadhaar Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="aadhaar" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Aadhaar Number *</label>
+                            <div class="mt-1.5">
+                                <input id="aadhaar" name="aadhaar" type="text" required pattern="\d{12}"
+                                    title="Please enter exactly 12 digits" maxlength="12" minlength="12" placeholder="123456789012"
+                                    class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
+                            </div>
+                            <p class="mt-1.5 text-[10px] text-gray-500">🔒 Securely encrypted at rest.</p>
+                        </div>
+
+                        <div>
+                            <label for="aadhaar_card_document" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Aadhaar Document Upload *</label>
+                            <div class="mt-1.5">
+                                <input id="aadhaar_card_document" name="aadhaar_card_document" type="file" accept=".jpg,.jpeg" required
+                                    onchange="validateAadhaarDocSize(this)"
+                                    class="appearance-none block w-full px-3 py-2 border border-gray-200 rounded-xl shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all duration-200">
+                            </div>
+                            <p id="aadhaar-doc-error" class="mt-1.5 text-[11px] text-red-600 hidden font-bold">File must be JPG/JPEG and under 100KB!</p>
+                            <p class="mt-1.5 text-[10px] text-gray-500">Must be a <b>JPG or JPEG</b> under 100KB.</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Photo Row -->
+                    <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Profile Photo *</label>
+                        <div class="mt-2.5 flex flex-col sm:flex-row items-center gap-4">
+                            <div class="relative flex-shrink-0">
+                                <img id="profile-preview" src="#" alt="Preview"
+                                    class="hidden h-24 w-24 object-cover rounded-full border-4 border-primary/20 shadow-md">
+                                <div id="profile-placeholder" class="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 border border-gray-200">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                            </div>
+                            <div class="flex-grow w-full">
+                                <input id="profile_photo" name="profile_photo" type="file" accept="image/*" required
+                                    onchange="validatePhotoSize(this, 'profile-preview')"
+                                    class="appearance-none block w-full px-3 py-2 border border-gray-200 rounded-xl shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all duration-200">
+                                <p id="photo-error" class="mt-1.5 text-[11px] text-red-600 hidden font-bold">File is too large! Image must be under 100KB.</p>
+                                <p class="mt-1.5 text-[10px] text-gray-500">Must be a <b>Square</b> image under 100KB.</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-amber-50/70 border-l-4 border-amber-400 rounded-xl text-[11px] text-amber-800">
+                            <strong>Mobile Users:</strong> Please select an existing photo from <em>Files/Gallery</em> instead of taking a live picture.
+                        </div>
+                    </div>
+
+                    <!-- Passwords Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Password *</label>
+                            <div class="relative mt-1.5">
+                                <input id="password" name="password" type="password" required oninput="validatePasswordMatch()"
+                                    class="appearance-none block w-full pl-4 pr-10 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
+                                <button type="button" onclick="togglePasswordVisibility('password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="retype_password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Retype Password *</label>
+                            <div class="relative mt-1.5">
+                                <input id="retype_password" name="retype_password" type="password" required oninput="validatePasswordMatch()"
+                                    class="appearance-none block w-full pl-4 pr-10 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm transition-all duration-200">
+                                <button type="button" onclick="togglePasswordVisibility('retype_password', this)" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="password-match-error" class="text-xs text-red-600 hidden font-bold">Passwords do not match!</p>
                 </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password *</label>
-                    <div class="mt-1">
-                        <input id="password" name="password" type="password" required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="retype_password" class="block text-sm font-medium text-gray-700">Retype Password
-                        *</label>
-                    <div class="mt-1">
-                        <input id="retype_password" name="retype_password" type="password" required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="profile_photo" class="block text-sm font-medium text-gray-700">Profile Photo *</label>
-                    <div class="mt-1">
-                        <input id="profile_photo" name="profile_photo" type="file" accept="image/*" required
-                            onchange="validatePhotoSize(this, 'profile-preview')"
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark">
-                    </div>
-                    <div class="mt-3 flex justify-center">
-                        <img id="profile-preview" src="#" alt="Preview"
-                            class="hidden h-32 w-32 object-cover rounded-full border-2 border-primary shadow-sm">
-                    </div>
-                    <p id="photo-error" class="mt-1 text-xs text-red-600 hidden font-bold">File is too large! Please choose an image under 100KB.</p>
-                    <p class="mt-1 text-xs text-gray-500 text-center">Must be a <b>Square</b> image under 100KB.</p>
-                    <div class="mt-2 p-2 bg-amber-50 border-l-4 border-amber-400 rounded text-xs text-amber-800">
-                        <strong>Mobile Users:</strong> Please select an existing photo from <em>Files/Gallery</em>
-                        instead of taking a live picture.
-                    </div>
-                </div>
-
-                <div>
-                    <button type="submit"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-0.5">
-                        Register
+                <!-- Navigation Controls -->
+                <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                    <button type="button" id="prev-btn" onclick="prevStep()" class="hidden px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                        Back
+                    </button>
+                    
+                    <button type="button" id="next-btn" onclick="nextStep()" class="ml-auto px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary-dark shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 flex items-center gap-2">
+                        Next Step
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    
+                    <button type="submit" id="submit-btn" class="hidden ml-auto px-6 py-2.5 rounded-xl text-sm font-black text-white bg-gradient-to-r from-[#C75000] to-[#E06000] hover:from-orange-700 hover:to-orange-600 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200 flex items-center gap-2">
+                        Register Account
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                     </button>
                 </div>
             </form>
@@ -142,56 +233,191 @@
     </div>
 </div>
 
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
 <script>
-    function checkFormValidity() {
-        const submitBtn = document.querySelector('button[type="submit"]');
-        const profileInput = document.getElementById('profile_photo');
-        const aadhaarDocInput = document.getElementById('aadhaar_card_document');
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        updateWizardUI();
         
-        let isValid = true;
+        // Prevent submission via Enter key unless on step 3 and form is valid
+        const form = document.getElementById('registration-form');
+        form.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                if (currentStep < totalSteps) {
+                    nextStep();
+                }
+            }
+        });
+    });
+
+    function nextStep() {
+        if (currentStep < totalSteps) {
+            if (validateStep(currentStep)) {
+                currentStep++;
+                updateWizardUI();
+            }
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateWizardUI();
+        }
+    }
+
+    function goToStep(stepNum) {
+        if (stepNum === currentStep) return;
+        if (stepNum > currentStep) {
+            // Validate intermediate steps
+            for (let s = currentStep; s < stepNum; s++) {
+                if (!validateStep(s)) {
+                    return; // Block
+                }
+            }
+        }
+        currentStep = stepNum;
+        updateWizardUI();
+    }
+
+    function validateStep(stepIndex) {
+        const stepPane = document.getElementById(`step-pane-${stepIndex}`);
+        const inputs = stepPane.querySelectorAll('input, select, textarea');
+        let stepValid = true;
         
-        // Profile Photo check
-        if (profileInput.files && profileInput.files[0]) {
-            const fileSizeKB = profileInput.files[0].size / 1024;
-            if (fileSizeKB > 100) {
-                isValid = false;
+        for (let input of inputs) {
+            if (!input.checkValidity()) {
+                input.reportValidity();
+                stepValid = false;
+                break; // Focus on first invalid
             }
         }
         
-        // Aadhaar Doc check
-        if (aadhaarDocInput.files && aadhaarDocInput.files[0]) {
-            const file = aadhaarDocInput.files[0];
-            const fileSizeKB = file.size / 1024;
-            const fileName = file.name.toLowerCase();
-            const isJPG = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');
-            if (fileSizeKB > 100 || !isJPG) {
-                isValid = false;
+        if (stepIndex === 3 && stepValid) {
+            // Check password matches
+            const password = document.getElementById('password').value;
+            const retypePassword = document.getElementById('retype_password').value;
+            const errorMsg = document.getElementById('password-match-error');
+            if (password !== retypePassword) {
+                errorMsg.classList.remove('hidden');
+                stepValid = false;
+            } else {
+                errorMsg.classList.add('hidden');
             }
         }
         
-        if (isValid) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        return stepValid;
+    }
+
+    function updateWizardUI() {
+        // Show/hide step panes
+        for (let i = 1; i <= totalSteps; i++) {
+            const pane = document.getElementById(`step-pane-${i}`);
+            if (i === currentStep) {
+                pane.classList.remove('hidden');
+            } else {
+                pane.classList.add('hidden');
+            }
+        }
+
+        // Update button visibilities
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+
+        if (currentStep === 1) {
+            prevBtn.classList.add('hidden');
         } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            prevBtn.classList.remove('hidden');
+        }
+
+        if (currentStep === totalSteps) {
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+        } else {
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+        }
+
+        // Update step indicator classes
+        for (let i = 1; i <= totalSteps; i++) {
+            const circle = document.getElementById(`step-circle-${i}`);
+            const label = document.getElementById(`step-label-${i}`);
+            
+            if (i < currentStep) {
+                // Completed
+                circle.innerHTML = `
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                `;
+                circle.className = "w-10 h-10 rounded-full bg-emerald-500 text-white border-4 border-white flex items-center justify-center shadow-md transition-all duration-300 transform scale-100";
+                label.className = "mt-2 text-[11px] sm:text-xs font-bold text-emerald-600 transition-all duration-300";
+            } else if (i === currentStep) {
+                // Active
+                circle.innerHTML = i;
+                circle.className = "w-10 h-10 rounded-full bg-primary text-white border-4 border-white flex items-center justify-center font-bold shadow-lg transition-all duration-300 transform scale-110 ring-4 ring-primary/20";
+                label.className = "mt-2 text-[11px] sm:text-xs font-black text-primary-dark transition-all duration-300";
+            } else {
+                // Pending
+                circle.innerHTML = i;
+                circle.className = "w-10 h-10 rounded-full bg-white text-gray-400 border-4 border-gray-50 flex items-center justify-center font-bold shadow-sm transition-all duration-300";
+                label.className = "mt-2 text-[11px] sm:text-xs font-semibold text-gray-400 transition-all duration-300";
+            }
+        }
+
+        // Progress bar width
+        const progressWidth = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('progress-bar').style.width = `${progressWidth}%`;
+        
+        checkFormValidity();
+    }
+
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const svg = button.querySelector('svg');
+        if (input.type === 'password') {
+            input.type = 'text';
+            svg.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+            `;
+        } else {
+            input.type = 'password';
+            svg.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            `;
         }
     }
 
     function validatePhotoSize(input, previewId) {
         const errorMsg = document.getElementById('photo-error');
+        const placeholder = document.getElementById('profile-placeholder');
+        const preview = document.getElementById(previewId);
         
         if (input.files && input.files[0]) {
             const fileSizeKB = input.files[0].size / 1024;
             if (fileSizeKB > 100) {
-                // File too large
                 errorMsg.classList.remove('hidden');
-                input.value = ''; // Clear the invalid file
-                document.getElementById(previewId).classList.add('hidden');
+                input.value = ''; // Clear file
+                preview.classList.add('hidden');
+                if (placeholder) placeholder.classList.remove('hidden');
             } else {
-                // File is fine
                 errorMsg.classList.add('hidden');
-                previewImage(input, previewId); // Call the existing preview function
+                if (placeholder) placeholder.classList.add('hidden');
+                previewImage(input, previewId); // base.html helper
             }
         }
         checkFormValidity();
@@ -207,15 +433,77 @@
             const isJPG = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');
             
             if (fileSizeKB > 100 || !isJPG) {
-                // File too large or invalid format
                 errorMsg.classList.remove('hidden');
-                input.value = ''; // Clear the invalid file
+                input.value = ''; // Clear file
             } else {
-                // File is fine
                 errorMsg.classList.add('hidden');
             }
         }
         checkFormValidity();
+    }
+
+    function validatePasswordMatch() {
+        const password = document.getElementById('password').value;
+        const retypePassword = document.getElementById('retype_password').value;
+        const errorMsg = document.getElementById('password-match-error');
+        
+        if (password && retypePassword && password !== retypePassword) {
+            errorMsg.classList.remove('hidden');
+        } else {
+            errorMsg.classList.add('hidden');
+        }
+        checkFormValidity();
+    }
+
+    function checkFormValidity() {
+        const submitBtn = document.getElementById('submit-btn');
+        const profileInput = document.getElementById('profile_photo');
+        const aadhaarDocInput = document.getElementById('aadhaar_card_document');
+        
+        let isValid = true;
+        
+        // Profile Photo check
+        if (profileInput.files && profileInput.files[0]) {
+            const fileSizeKB = profileInput.files[0].size / 1024;
+            if (fileSizeKB > 100) isValid = false;
+        } else {
+            isValid = false;
+        }
+        
+        // Aadhaar Doc check
+        if (aadhaarDocInput.files && aadhaarDocInput.files[0]) {
+            const file = aadhaarDocInput.files[0];
+            const fileSizeKB = file.size / 1024;
+            const fileName = file.name.toLowerCase();
+            const isJPG = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');
+            if (fileSizeKB > 100 || !isJPG) isValid = false;
+        } else {
+            isValid = false;
+        }
+
+        // Passwords check
+        const password = document.getElementById('password').value;
+        const retypePassword = document.getElementById('retype_password').value;
+        if (!password || !retypePassword || password !== retypePassword) {
+            isValid = false;
+        }
+
+        // Basic inputs HTML5 check
+        const inputs = document.querySelectorAll('#registration-form input[required], #registration-form select[required], #registration-form textarea[required]');
+        for (let input of inputs) {
+            if (input.value.trim() === '') {
+                isValid = false;
+                break;
+            }
+        }
+        
+        if (isValid) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
     }
 </script>
 {% endblock %}

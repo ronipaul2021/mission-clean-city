@@ -7,31 +7,33 @@
         nav { display: none !important; }
         footer { display: none !important; }
         .print\:hidden { display: none !important; }
-        .shadow-sm, .shadow-md, .shadow-inner, .shadow { box-shadow: none !important; }
-        .bg-gray-50 { background-color: transparent !important; }
+        .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-inner, .shadow { box-shadow: none !important; }
+        .bg-gray-50, .bg-slate-50\/50, .bg-blue-50 { background-color: transparent !important; }
         .max-h-96 { max-height: none !important; overflow: visible !important; }
         .border, .border-gray-100, .border-gray-200 { border-color: #e5e7eb !important; }
-        /* Keep lists from breaking across pages if possible */
         li { page-break-inside: avoid; }
     }
 </style>
+
 <div class="bg-background min-h-screen py-10 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0 print:mb-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 bg-white p-6 rounded-3xl shadow-xl border border-gray-100/50 print:shadow-none print:border-none print:p-0 print:mb-4">
             <div class="print:hidden">
-                <h1 class="text-3xl font-extrabold text-primary-dark">Citizen Profile</h1>
-                <div class="mt-2 flex flex-wrap gap-4 text-sm font-medium">
-                    <a href="{% url 'admin_dashboard' %}" class="text-secondary hover:text-primary transition flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Issues
+                <h1 class="text-3xl font-extrabold text-primary-dark tracking-tight">Citizen Profile</h1>
+                <div class="mt-2 flex flex-wrap gap-5 text-sm font-bold">
+                    <a href="{% url 'admin_dashboard' %}" class="text-secondary hover:text-primary transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Issues Dashboard
                     </a>
-                    <a href="{% url 'admin_suggestions' %}" class="text-secondary hover:text-primary transition flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-gray-300">|</span>
+                    <a href="{% url 'admin_suggestions' %}" class="text-secondary hover:text-primary transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Suggestions
                     </a>
-                    <a href="{% url 'admin_citizens_directory' %}" class="text-secondary hover:text-primary transition flex items-center">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="text-gray-300">|</span>
+                    <a href="{% url 'admin_citizens_directory' %}" class="text-secondary hover:text-primary transition-colors flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         Citizens Directory
                     </a>
                 </div>
@@ -41,182 +43,228 @@
                 <p class="text-gray-600 font-medium">Official Citizen Profile Record</p>
             </div>
             <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-3 print:mt-0">
-                <button onclick="window.print()" class="px-4 py-2 bg-green-600 text-white rounded-md font-medium text-sm shadow-sm hover:bg-green-700 transition print:hidden flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                <button onclick="window.print()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm shadow-md hover:from-emerald-700 hover:to-teal-700 hover:shadow-lg transition-all print:hidden flex items-center gap-2 transform active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     Download PDF
                 </button>
-                <span class="px-4 py-2 bg-blue-50 text-blue-700 rounded-md font-medium text-sm border border-blue-100 print:border-none print:bg-transparent print:p-0 print:text-gray-800">
-                    Citizen ID: <span class="font-bold">{% if citizen.citizen_id %}{{ citizen.citizen_id }}{% else %}BM-PENDING{% endif %}</span>
+                <span class="px-4 py-2.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs border border-blue-100 print:border-none print:bg-transparent print:p-0 print:text-gray-800 uppercase tracking-wider">
+                    ID: <span class="font-black text-primary">{% if citizen.citizen_id %}{{ citizen.citizen_id }}{% else %}BM-PENDING{% endif %}</span>
                 </span>
             </div>
         </div>
 
-        <!-- Profile Details -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Personal Information</h2>
-            <div class="flex flex-col md:flex-row gap-8">
-                <!-- Photo -->
-                <div class="flex-shrink-0 flex flex-col items-center gap-4">
-                    {% if citizen.profile_photo %}
-                        <img src="{{ citizen.profile_photo.url }}" alt="{{ citizen.name }}" class="h-40 w-40 object-cover rounded-xl shadow-md border-2 border-gray-200">
-                    {% else %}
-                        <div class="h-40 w-40 bg-gray-100 rounded-xl shadow-inner border-2 border-gray-200 flex items-center justify-center">
-                            <svg class="h-16 w-16 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                        </div>
-                    {% endif %}
-                    
-                    <!-- QR Code -->
-                    {% if citizen.citizen_id %}
-                    <div class="bg-white p-2 rounded-lg border border-gray-100 shadow-sm print:shadow-none print:border-none">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=Name:{{ citizen.name }}%0A ID:{{ citizen.citizen_id }}%0AMobile:{{ citizen.mobile_number }}%0AWard:{{ citizen.ward_number }}%0AAddress:{{ citizen.address }}" alt="QR Code" class="h-28 w-28 mx-auto">
-                        <p class="text-[10px] text-center text-gray-400 mt-1 uppercase tracking-widest">Verify ID</p>
-                    </div>
-                    {% endif %}
-                </div>
+        <!-- Profile Details Card -->
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100/50 mb-8 overflow-hidden relative">
+            <!-- Subtle Top Gradient Accent -->
+            <div class="h-1.5 w-full bg-gradient-to-r from-primary to-secondary absolute top-0 left-0"></div>
+            
+            <div class="p-8 sm:p-10">
+                <h2 class="text-xl font-extrabold text-primary-dark mb-8 border-b border-gray-100 pb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Personal Information
+                </h2>
                 
-                <!-- Details -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 flex-grow">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Full Name</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900">{{ citizen.name }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Mobile Number</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900">+91-{{ citizen.mobile_number }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Aadhaar Number <span class="text-xs text-red-500 font-normal ml-2">(Decrypted)</span></p>
-                        <p class="mt-1 text-lg font-mono font-bold text-gray-900">{{ decrypted_aadhaar }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Ward Number</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900">Ward {{ citizen.ward_number }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Aadhaar Card Document</p>
-                        {% if citizen.aadhaar_card_document %}
-                            <a href="{{ citizen.aadhaar_card_document.url }}" target="_blank" class="mt-2 inline-flex items-center px-3 py-1.5 border border-secondary text-xs font-bold rounded-lg text-secondary bg-white hover:bg-blue-50 transition-colors">
-                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                View Uploaded Document
-                            </a>
-                        {% else %}
-                            <p class="mt-1 text-sm text-gray-400 font-medium">No document uploaded</p>
+                <div class="flex flex-col lg:flex-row gap-10">
+                    <!-- Avatar & QR -->
+                    <div class="flex-shrink-0 flex flex-row lg:flex-col items-center justify-center gap-8 self-center lg:self-start w-full lg:w-auto">
+                        <!-- Avatar -->
+                        <div class="relative">
+                            {% if citizen.profile_photo %}
+                                <img src="{{ citizen.profile_photo.url }}" alt="{{ citizen.name }}" 
+                                    class="h-40 w-40 object-cover rounded-full shadow-lg border-4 border-white ring-4 ring-primary/10 transition-transform duration-300 hover:scale-105">
+                            {% else %}
+                                <div class="h-40 w-40 bg-gradient-to-tr from-slate-100 to-slate-200 rounded-full shadow-inner border-4 border-white ring-4 ring-primary/10 flex items-center justify-center">
+                                    <svg class="h-16 w-16 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- QR Code -->
+                        {% if citizen.citizen_id %}
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-md transition-all hover:shadow-lg flex flex-col items-center justify-center">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=Name:{{ citizen.name }}%0A ID:{{ citizen.citizen_id }}%0AMobile:{{ citizen.mobile_number }}%0AWard:{{ citizen.ward_number }}%0AAddress:{{ citizen.address }}" 
+                                alt="QR Code" class="h-24 w-24 mx-auto rounded-xl">
+                            <p class="text-[9px] text-center text-gray-400 font-bold mt-2 uppercase tracking-widest">Verify ID</p>
+                        </div>
                         {% endif %}
                     </div>
-                    <div class="md:col-span-2">
-                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Registered Address</p>
-                        <p class="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{{ citizen.address }}</p>
+                    
+                    <!-- Details Fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 flex-grow">
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Full Name</span>
+                            <p class="mt-1.5 text-lg font-black text-gray-900 tracking-tight">{{ citizen.name }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Mobile Number</span>
+                            <p class="mt-1.5 text-lg font-black text-gray-900 tracking-tight">+91 {{ citizen.mobile_number }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block flex items-center gap-1.5">
+                                Aadhaar Number 
+                                <span class="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-[9px] font-bold tracking-normal uppercase">Decrypted</span>
+                            </span>
+                            <p class="mt-1.5 text-lg font-mono font-bold text-gray-900 tracking-wider">{{ decrypted_aadhaar }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Ward Number</span>
+                            <p class="mt-1.5 text-lg font-black text-primary tracking-tight">Ward {{ citizen.ward_number }}</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Aadhaar Card Document</span>
+                            {% if citizen.aadhaar_card_document %}
+                                <a href="{{ citizen.aadhaar_card_document.url }}" target="_blank" 
+                                    class="inline-flex items-center px-4 py-2 border border-secondary text-xs font-bold rounded-xl text-secondary bg-white hover:bg-orange-50/50 transition-colors gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View Uploaded Document
+                                </a>
+                            {% else %}
+                                <p class="text-sm text-gray-400 font-bold italic">No document uploaded</p>
+                            {% endif %}
+                        </div>
+                        <div class="md:col-span-2">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Registered Address</span>
+                            <p class="mt-2 text-sm font-semibold text-gray-800 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 leading-relaxed">{{ citizen.address }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- History -->
+        <!-- History Split Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Complaints History -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900">Complaints History ({{ complaints|length }})</h3>
+            
+            <!-- Complaints History Card -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100/50 overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="text-md font-extrabold text-primary-dark flex items-center gap-2">
+                        <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        Complaints History ({{ complaints|length }})
+                    </h3>
                 </div>
-                <ul class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                
+                <ul class="divide-y divide-gray-100 max-h-96 overflow-y-auto flex-grow">
                     {% for complaint in complaints %}
-                    <li class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <li class="px-6 py-4.5 hover:bg-slate-50/30 transition-colors">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-bold text-secondary truncate">{{ complaint.problem_id }}</p>
-                            <div class="ml-2 flex-shrink-0 flex">
-                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if complaint.status == 'RESOLVED' %} bg-green-100 text-green-800
-                                    {% elif complaint.status == 'PENDING' %} bg-yellow-100 text-yellow-800
-                                    {% elif complaint.status == 'IN_PROGRESS' %} bg-blue-100 text-blue-800
-                                    {% elif complaint.status == 'TERMINATED' %} bg-red-100 text-red-800
+                            <p class="text-sm font-bold text-primary truncate">{{ complaint.problem_id }}</p>
+                            <div class="ml-2 flex-shrink-0">
+                                <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider
+                                    {% if complaint.status == 'RESOLVED' %} bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% elif complaint.status == 'PENDING' %} bg-amber-50 text-amber-700 border border-amber-100
+                                    {% elif complaint.status == 'IN_PROGRESS' %} bg-blue-50 text-blue-700 border border-blue-100
+                                    {% elif complaint.status == 'TERMINATED' %} bg-rose-50 text-rose-700 border border-rose-100
                                     {% endif %}">
                                     {{ complaint.get_status_display }}
-                                </p>
+                                </span>
                             </div>
                         </div>
-                        <div class="mt-2 sm:flex sm:justify-between">
-                            <div class="sm:flex">
-                                <p class="flex items-center text-sm text-gray-500">
-                                    {{ complaint.get_category_display }}
-                                </p>
-                            </div>
-                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                                <p>Reported: {{ complaint.submitted_at|date:"M d, Y" }}</p>
-                            </div>
+                        <div class="mt-2.5 flex justify-between items-center text-xs text-gray-500">
+                            <span class="font-bold text-gray-600">{{ complaint.get_category_display }}</span>
+                            <span class="font-semibold text-gray-400">Reported: {{ complaint.submitted_at|date:"M d, Y" }}</span>
                         </div>
                     </li>
                     {% empty %}
-                    <li class="px-4 py-8 text-center text-gray-500 text-sm">No complaints reported yet.</li>
+                    <!-- Empty State Graphic -->
+                    <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <div class="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center mb-2 border border-emerald-100/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-800">No Complaints Logged</h4>
+                        <p class="text-xs text-gray-400 mt-1 max-w-xs leading-relaxed">This citizen has not reported any clean city complaints or civic issues yet.</p>
+                    </div>
                     {% endfor %}
                 </ul>
                 
                 <!-- Complaints Pagination -->
                 {% if complaints.has_other_pages %}
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between print:hidden">
-                    <div class="flex-1 flex justify-between">
+                <div class="px-6 py-3.5 bg-slate-50/50 border-t border-gray-100 flex items-center justify-between print:hidden text-xs">
+                    <div class="flex-1 flex justify-between items-center">
                         {% if complaints.has_previous %}
-                        <a href="?c_page={{ complaints.previous_page_number }}&s_page={{ request.GET.s_page }}" class="text-sm font-medium text-primary hover:text-primary-dark">Previous</a>
-                        {% else %}<span class="text-sm text-gray-400">Previous</span>{% endif %}
-                        <span class="text-sm text-gray-500">Page {{ complaints.number }} of {{ complaints.paginator.num_pages }}</span>
+                        <a href="?c_page={{ complaints.previous_page_number }}&s_page={{ request.GET.s_page }}" class="font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            Previous
+                        </a>
+                        {% else %}<span class="text-gray-300 font-bold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>Previous</span>{% endif %}
+                        
+                        <span class="text-gray-500 font-semibold">Page {{ complaints.number }} of {{ complaints.paginator.num_pages }}</span>
+                        
                         {% if complaints.has_next %}
-                        <a href="?c_page={{ complaints.next_page_number }}&s_page={{ request.GET.s_page }}" class="text-sm font-medium text-primary hover:text-primary-dark">Next</a>
-                        {% else %}<span class="text-sm text-gray-400">Next</span>{% endif %}
+                        <a href="?c_page={{ complaints.next_page_number }}&s_page={{ request.GET.s_page }}" class="font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                            Next
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                        {% else %}<span class="text-gray-300 font-bold flex items-center gap-1">Next<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>{% endif %}
                     </div>
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Suggestions History -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900">Suggestions History ({{ suggestions|length }})</h3>
+            <!-- Suggestions History Card -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100/50 overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-gray-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="text-md font-extrabold text-primary-dark flex items-center gap-2">
+                        <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        Suggestions History ({{ suggestions|length }})
+                    </h3>
                 </div>
-                <ul class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                
+                <ul class="divide-y divide-gray-100 max-h-96 overflow-y-auto flex-grow">
                     {% for suggestion in suggestions %}
-                    <li class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <li class="px-6 py-4.5 hover:bg-slate-50/30 transition-colors">
                         <div class="flex items-center justify-between">
                             <p class="text-sm font-bold text-primary truncate">{{ suggestion.ticket_number }}</p>
-                            <div class="ml-2 flex-shrink-0 flex">
-                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if suggestion.status == 'ACCEPTED' %} bg-green-100 text-green-800
-                                    {% elif suggestion.status == 'PENDING' %} bg-yellow-100 text-yellow-800
-                                    {% elif suggestion.status == 'REJECTED' %} bg-red-100 text-red-800
+                            <div class="ml-2 flex-shrink-0">
+                                <span class="px-2.5 py-1 text-[10px] font-black rounded-full uppercase tracking-wider
+                                    {% if suggestion.status == 'ACCEPTED' %} bg-emerald-50 text-emerald-700 border border-emerald-100
+                                    {% elif suggestion.status == 'PENDING' %} bg-amber-50 text-amber-700 border border-amber-100
+                                    {% elif suggestion.status == 'REJECTED' %} bg-rose-50 text-rose-700 border border-rose-100
                                     {% endif %}">
                                     {{ suggestion.get_status_display }}
-                                </p>
+                                </span>
                             </div>
                         </div>
-                        <div class="mt-2 sm:flex sm:justify-between">
-                            <div class="sm:flex">
-                                <p class="flex items-center text-sm text-gray-500">
-                                    {{ suggestion.get_suggestion_category_display }} - Ward {{ suggestion.target_ward_number }}
-                                </p>
-                            </div>
-                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                                <p>Suggested: {{ suggestion.submitted_at|date:"M d, Y" }}</p>
-                            </div>
+                        <div class="mt-2.5 flex justify-between items-center text-xs text-gray-500">
+                            <span class="font-bold text-gray-600">{{ suggestion.get_suggestion_category_display }} - Ward {{ suggestion.target_ward_number }}</span>
+                            <span class="font-semibold text-gray-400">Suggested: {{ suggestion.submitted_at|date:"M d, Y" }}</span>
                         </div>
                     </li>
                     {% empty %}
-                    <li class="px-4 py-8 text-center text-gray-500 text-sm">No suggestions submitted yet.</li>
+                    <!-- Empty State Graphic -->
+                    <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-2 border border-blue-100/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-800">No Suggestions Logged</h4>
+                        <p class="text-xs text-gray-400 mt-1 max-w-xs leading-relaxed">This citizen has not submitted any suggestions for community improvement yet.</p>
+                    </div>
                     {% endfor %}
                 </ul>
-
+                
                 <!-- Suggestions Pagination -->
                 {% if suggestions.has_other_pages %}
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between print:hidden">
-                    <div class="flex-1 flex justify-between">
+                <div class="px-6 py-3.5 bg-slate-50/50 border-t border-gray-100 flex items-center justify-between print:hidden text-xs">
+                    <div class="flex-1 flex justify-between items-center">
                         {% if suggestions.has_previous %}
-                        <a href="?s_page={{ suggestions.previous_page_number }}&c_page={{ request.GET.c_page }}" class="text-sm font-medium text-primary hover:text-primary-dark">Previous</a>
-                        {% else %}<span class="text-sm text-gray-400">Previous</span>{% endif %}
-                        <span class="text-sm text-gray-500">Page {{ suggestions.number }} of {{ suggestions.paginator.num_pages }}</span>
+                        <a href="?s_page={{ suggestions.previous_page_number }}&c_page={{ request.GET.c_page }}" class="font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                            Previous
+                        </a>
+                        {% else %}<span class="text-gray-300 font-bold flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>Previous</span>{% endif %}
+                        
+                        <span class="text-gray-500 font-semibold">Page {{ suggestions.number }} of {{ suggestions.paginator.num_pages }}</span>
+                        
                         {% if suggestions.has_next %}
-                        <a href="?s_page={{ suggestions.next_page_number }}&c_page={{ request.GET.c_page }}" class="text-sm font-medium text-primary hover:text-primary-dark">Next</a>
-                        {% else %}<span class="text-sm text-gray-400">Next</span>{% endif %}
+                        <a href="?s_page={{ suggestions.next_page_number }}&c_page={{ request.GET.c_page }}" class="font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+                            Next
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                        {% else %}<span class="text-gray-300 font-bold flex items-center gap-1">Next<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></span>{% endif %}
                     </div>
                 </div>
                 {% endif %}
             </div>
+            
         </div>
     </div>
 </div>
