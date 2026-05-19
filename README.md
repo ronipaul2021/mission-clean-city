@@ -79,7 +79,9 @@ graph TD
 * **Aadhaar Encryption:** All citizen-entered Aadhaar numbers are fully protected using state-of-the-art **Fernet Symmetric Cryptography (AES-128 in CBC mode)** before database writes.
 * **Zero-Downtime Key Rotation:** Embedded utilities that support rotating the encryption key periodically without interrupting access to legacy data.
 * **SMTP OTP Authentication:** Fully automated OTP generator for high-risk operations including new citizen registrations, password resets, and email modifications.
-* **Session Rate-Limiting:** Active brute-force protection, login trial limiters, and file size gatekeepers to secure system endpoints.
+* **Session Rate-Limiting & Brute-Force Shield:** Active rate-limiting and brute-force protection for citizen and admin logins (5 failed attempts locks logins for 10/15 minutes respectively).
+* **Blank Credentials Guard:** Smart pre-authentication checks that ignore empty/blank form submissions, preventing automated or accidental form triggers from consuming login attempts.
+* **Secure Cache Prevention Middleware:** Custom no-cache middleware (`NoCacheSecureMiddleware`) that injects security headers (`Cache-Control: no-store`, etc.) on all authenticated responses to prevent browser back-button caching of private dashboards.
 
 ### 4. 📈 Executive Control Tower (Admin Dashboard)
 * **Ward-Wise Analytical KPIs:** High-density, gorgeous UI dashboard rendering active visual charts (**Chart.js**) for resolved vs. pending ratios across all 14 administrative wards.
