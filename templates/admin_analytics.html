@@ -544,10 +544,27 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     (function () {
-        // Theme Colors
-        const primaryColor = '#002D72';
-        const secondaryColor = '#1E3E62';
-        const accentColors = ['#002D72', '#1E3E62', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
+        // Theme Colors - Vibrant, Modern, High-Contrast Palette
+        const primaryColor = '#4F46E5'; // Indigo
+        const secondaryColor = '#06B6D4'; // Cyan
+        
+        // 14 vibrant contrasting colors for Wards
+        const wardColors = [
+            '#FF6B6B', '#4DABF7', '#51CF66', '#FCC419', '#FF922B', 
+            '#CC5DE8', '#20C997', '#845EF7', '#F06595', '#3b5bdb', 
+            '#74C0FC', '#F76707', '#37B24D', '#FF8787'
+        ];
+        
+        // 7 distinct colors for Categories
+        const categoryColors = [
+            '#EF4444', // Garbage (Red)
+            '#F59E0B', // Roads (Amber)
+            '#3B82F6', // Drainage (Blue)
+            '#EAB308', // Streetlights (Yellow)
+            '#06B6D4', // Water (Cyan)
+            '#10B981', // Health (Emerald)
+            '#8B5CF6'  // Other (Purple)
+        ];
         
         Chart.defaults.font.family = "'Lato', sans-serif";
         Chart.defaults.font.size = 11;
@@ -592,9 +609,9 @@
                     datasets: [{
                         label: 'Complaints',
                         data: wardData,
-                        backgroundColor: primaryColor,
+                        backgroundColor: wardColors,
                         borderRadius: 6,
-                        hoverBackgroundColor: '#C75000'
+                        hoverBackgroundColor: wardColors.map(c => c + 'CC') // Add opacity on hover
                     }]
                 },
                 options: {
@@ -630,7 +647,7 @@
                     labels: JSON.parse('{{ chart_cat_labels|escapejs }}'),
                     datasets: [{
                         data: JSON.parse('{{ chart_cat_data|escapejs }}'),
-                        backgroundColor: accentColors,
+                        backgroundColor: categoryColors,
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
@@ -654,7 +671,7 @@
                     datasets: [{
                         label: 'Avg Days to Resolve',
                         data: JSON.parse('{{ res_time_data_js|escapejs }}'),
-                        backgroundColor: '#C75000',
+                        backgroundColor: categoryColors,
                         borderRadius: 6,
                     }]
                 },
@@ -683,10 +700,10 @@
                         label: 'Complaints',
                         data: JSON.parse('{{ chart_month_data|escapejs }}'),
                         borderColor: primaryColor,
-                        backgroundColor: 'rgba(0, 45, 114, 0.05)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.08)',
                         fill: true,
                         tension: 0.35,
-                        pointBackgroundColor: primaryColor,
+                        pointBackgroundColor: '#FF6B6B',
                         pointRadius: 4
                     }]
                 },
@@ -711,7 +728,7 @@
                     labels: JSON.parse('{{ sentiment_labels_js|escapejs }}'),
                     datasets: [{
                         data: JSON.parse('{{ sentiment_data_js|escapejs }}'),
-                        backgroundColor: ['#10b981', '#94a3b8', '#ef4444'],
+                        backgroundColor: ['#10B981', '#3B82F6', '#EF4444'],
                         borderWidth: 2,
                         borderColor: '#fff'
                     }]
@@ -734,7 +751,7 @@
                     datasets: [{
                         label: 'Suggestions',
                         data: JSON.parse('{{ topic_data_js|escapejs }}'),
-                        backgroundColor: '#1E3E62',
+                        backgroundColor: wardColors,
                         borderRadius: 6,
                     }]
                 },
@@ -760,7 +777,7 @@
                     labels: JSON.parse('{{ chart_sug_ward_labels|escapejs }}'),
                     datasets: [{
                         data: JSON.parse('{{ chart_sug_ward_data|escapejs }}'),
-                        backgroundColor: '#f59e0b',
+                        backgroundColor: wardColors,
                         borderRadius: 6,
                     }]
                 },
@@ -791,17 +808,29 @@
                     cell.innerText = val;
                     cell.setAttribute('data-val', val);
                     
-                    // Style cell background according to density
-                    let opacity = 0;
+                    // Style cell background according to density (Multi-hue palette)
+                    let bgColor = 'transparent';
+                    let textColor = '#1e293b';
                     if (val > 0) {
-                        opacity = Math.min(0.08 + (val * 0.12), 0.75);
+                        if (val === 1) {
+                            bgColor = 'rgba(20, 184, 166, 0.15)'; // Teal
+                            textColor = '#0f766e';
+                        } else if (val === 2) {
+                            bgColor = 'rgba(234, 179, 8, 0.25)'; // Yellow
+                            textColor = '#854d0e';
+                        } else if (val === 3) {
+                            bgColor = 'rgba(249, 115, 22, 0.5)'; // Orange
+                            textColor = '#ffffff';
+                        } else if (val === 4) {
+                            bgColor = 'rgba(239, 68, 68, 0.7)'; // Red
+                            textColor = '#ffffff';
+                        } else {
+                            bgColor = 'rgba(185, 28, 28, 0.9)'; // Dark Red
+                            textColor = '#ffffff';
+                        }
                     }
-                    cell.style.backgroundColor = `rgba(0, 45, 114, ${opacity})`;
-                    if (opacity > 0.4) {
-                        cell.style.color = '#ffffff';
-                    } else {
-                        cell.style.color = '#1e293b';
-                    }
+                    cell.style.backgroundColor = bgColor;
+                    cell.style.color = textColor;
                 }
             }
         }
