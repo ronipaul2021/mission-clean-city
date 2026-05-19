@@ -716,6 +716,87 @@
             resetTimer();
         })();
     </script>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-confirm-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-0">
+        <div id="logout-modal-content" class="bg-white rounded-2xl shadow-2xl max-w-md w-[90%] p-8 text-center border-t-8 border-red-600 transform scale-95 transition-all duration-300">
+            <!-- Icon -->
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </div>
+            <!-- Title & Description -->
+            <h3 class="text-xl font-extrabold text-[#002D72] mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to log out of your session?</p>
+            <!-- Actions -->
+            <div class="flex gap-3 justify-center">
+                <button id="logout-confirm-no" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm px-6 py-3 rounded-xl transition-all duration-200 w-1/2">
+                    No, Cancel
+                </button>
+                <a id="logout-confirm-yes" href="{% url 'logout' %}" class="bg-red-600 hover:bg-red-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all duration-200 w-1/2 inline-flex items-center justify-center">
+                    Yes, Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const modal = document.getElementById('logout-confirm-modal');
+            const content = document.getElementById('logout-modal-content');
+            const btnNo = document.getElementById('logout-confirm-no');
+            const btnYes = document.getElementById('logout-confirm-yes');
+            const LOGOUT_URL = "{% url 'logout' %}";
+            
+            function openModal(e) {
+                e.preventDefault();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                // Allow browser to render 'flex' state before transition triggers
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.classList.add('opacity-100');
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                }, 10);
+            }
+            
+            function closeModal() {
+                modal.classList.remove('opacity-100');
+                modal.classList.add('opacity-0');
+                content.classList.remove('scale-100');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+            
+            // Delegate clicks on manual logout links
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link && link.getAttribute('href') === LOGOUT_URL) {
+                    // Do not trigger modal for auto-logout warning popup links
+                    if (!link.closest('#idle-overlay')) {
+                        openModal(e);
+                    }
+                }
+            });
+            
+            btnNo.addEventListener('click', closeModal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
     {% endif %}
 
     <script>
