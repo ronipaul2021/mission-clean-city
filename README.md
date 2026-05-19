@@ -66,9 +66,9 @@ graph TD
 ## 💎 Elite Platform Modules
 
 ### 1. 🤖 The Intelligent Core (Birni AI)
-* **AI Writing Assistant:** Converts informal, localized, or grammatically raw citizen reports into formal, structured, municipal-grade incident dispatches automatically utilizing the ultra-fast **Google Gemini 1.5 Flash** model.
+* **AI Writing Assistant:** Converts informal, localized, or grammatically raw citizen reports into formal, structured, municipal-grade incident dispatches automatically utilizing the ultra-fast **Google Gemini 1.5/2.5 Flash** models.
 * **24/7 Citizen Copilot:** Built-in interactive chatbot pre-loaded with knowledge about Birnagar's 14 wards, local contact directories, civic policies, and problem-reporting guidelines.
-* **Resilient Dual-Path Pipeline:** Intelligent failover mechanism utilizing the Bytez Unified API as the primary path with a robust direct SDK connection to Google Gemini for 100% service availability.
+* **Resilient Dual-Path Pipeline:** Intelligent failover mechanism utilizing the direct Google API connection as the primary path (with **Gemini 2.5 Flash**) and the Bytez Unified API proxy as the fallback/redundancy path (with **Gemini 1.5 Flash**) for 100% service uptime.
 
 ### 2. 🗺️ High-Precision GIS & Media Processing
 * **Interactive Incident Pinning:** A customizable, mobile-friendly **Leaflet.js** map allowing citizens to drop a precise pin on the geographical location of the issue.
